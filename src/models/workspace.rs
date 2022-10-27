@@ -1,20 +1,30 @@
 use diesel::insert_into;
-use diesel::prelude::*;
 use diesel::PgConnection;
 use uuid::Uuid;
 
 use crate::error::AppError;
 use crate::schema::{self, workspaces};
 
+use diesel::prelude::*;
+use diesel::OptionalExtension;
 use schema::workspaces::dsl::*;
 
-#[derive(Insertable, Queryable)]
+#[derive(Insertable, Queryable, Identifiable, Debug, Clone)]
+#[diesel(table_name = workspaces)]
 pub struct Workspace {
     id: Uuid,
     code: String,
 }
 
 impl Workspace {
+    pub fn find(conn: &mut PgConnection, ws_id: &Uuid) -> Result<Option<Workspace>, AppError> {
+        workspaces
+            .filter(id.eq(ws_id))
+            .first::<Workspace>(conn)
+            .optional()
+            .map_err(|e| AppError::DatabaseError(e))
+    }
+
     pub fn id(&self) -> Uuid {
         self.id
     }

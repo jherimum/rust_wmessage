@@ -1,6 +1,17 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
+    api_keys (id) {
+        id -> Uuid,
+        workspace_id -> Uuid,
+        name -> Varchar,
+        prefix -> Varchar,
+        hash -> Varchar,
+        expires_at -> Timestamp,
+    }
+}
+
+diesel::table! {
     channels (id) {
         id -> Uuid,
         workspace_id -> Uuid,
@@ -53,9 +64,9 @@ diesel::joinable!(channels -> workspaces (workspace_id));
 diesel::joinable!(message_type_versions -> message_types (message_type_id));
 diesel::joinable!(message_types -> channels (channel_id));
 diesel::joinable!(passwords -> users (user_id));
-diesel::joinable!(users -> workspaces (workspace_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
+    api_keys,
     channels,
     message_type_versions,
     message_types,

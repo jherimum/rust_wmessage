@@ -1,5 +1,9 @@
-use actix_web::{middleware::Logger, web, App, HttpServer};
-use wmessage::{config::AppConfig, handlers::app_config, services::crypto::PasswordCrypto};
+use actix_web::web::Data;
+use actix_web::{middleware::Logger, App, HttpServer};
+use wmessage::app::State;
+
+use wmessage::app::handlers::registrations::register;
+use wmessage::config::AppConfig;
 
 #[actix_web::main]
 async fn main() -> Result<(), std::io::Error> {
@@ -11,9 +15,8 @@ async fn main() -> Result<(), std::io::Error> {
     HttpServer::new(move || {
         App::new()
             .wrap(Logger::default())
-            .app_data(web::Data::new(pool.clone()))
-            .app_data(web::Data::new(PasswordCrypto::new()))
-            .configure(app_config)
+            .app_data(Data::new(State { pool: pool.clone() }))
+            .service(register)
     })
     .bind((config.host, config.port))?
     .run()

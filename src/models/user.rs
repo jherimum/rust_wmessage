@@ -1,7 +1,7 @@
-use diesel::prelude::*;
 use diesel::{insert_into, PgConnection};
 use uuid::Uuid;
 
+use diesel::prelude::*;
 use schema::users::dsl::*;
 
 use crate::error::AppError;

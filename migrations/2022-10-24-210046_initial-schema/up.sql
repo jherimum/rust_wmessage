@@ -53,3 +53,17 @@ create table message_type_versions(
 	CONSTRAINT ux_message_type_versions_version UNIQUE (message_type_id, "number"),
 	CONSTRAINT message_type_versions_msg_type_fk FOREIGN KEY (message_type_id) REFERENCES message_types(id)
 );
+
+
+create table api_keys(
+	id uuid NOT NULL,
+	workspace_id uuid NOT NULL,
+	name varchar NOT NULL,
+	prefix varchar NOT NULL,
+	hash varchar NOT NULL,
+	expires_at timestamp NOT NULL,
+	CONSTRAINT pk_api_keys PRIMARY KEY (id),
+	CONSTRAINT users_fk FOREIGN KEY (workspace_id) REFERENCES workspaces(id),
+	CONSTRAINT ux_worspace_prefix UNIQUE (workspace_id, prefix)
+
+)

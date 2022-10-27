@@ -17,9 +17,9 @@ use super::crypto::PasswordCrypto;
 
 #[derive(Deserialize, Debug)]
 pub struct RegistrationForm {
-    workspace_code: String,
-    user_email: String,
-    user_password: String,
+    pub workspace_code: String,
+    pub user_email: String,
+    pub user_password: String,
 }
 
 pub struct RegistrationService {
