@@ -4,9 +4,10 @@ use uuid::Uuid;
 use diesel::prelude::*;
 use schema::users::dsl::*;
 
-use crate::error::AppError;
 use crate::models::workspace::Workspace;
 use crate::schema::{self, users};
+
+use anyhow::Result;
 
 #[derive(Insertable, Queryable, Debug)]
 pub struct User {
@@ -21,11 +22,7 @@ impl User {
         self.id
     }
 
-    pub fn create_owner(
-        conn: &mut PgConnection,
-        ws: &Workspace,
-        _email: &String,
-    ) -> Result<User, AppError> {
+    pub fn create_owner(conn: &mut PgConnection, ws: &Workspace, _email: &String) -> Result<User> {
         let user = User {
             id: Uuid::new_v4(),
             email: _email.clone(),
@@ -33,11 +30,9 @@ impl User {
             owner: true,
         };
 
-        insert_into(users)
-            .values(&user)
-            .execute(conn)
-            .map_err(|e| AppError::DatabaseError(e))?;
-
-        Ok(user)
+        match insert_into(users).values(&user).execute(conn) {
+            Ok(i) => Ok(user),
+            Err(e) => Err(anyhow::Error::new(e)),
+        }
     }
 }

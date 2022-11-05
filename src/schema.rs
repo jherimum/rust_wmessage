@@ -17,6 +17,7 @@ diesel::table! {
         workspace_id -> Uuid,
         code -> Varchar,
         name -> Varchar,
+        properties -> Jsonb,
     }
 }
 

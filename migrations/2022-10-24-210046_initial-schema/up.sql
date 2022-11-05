@@ -29,6 +29,7 @@ create table channels(
 	workspace_id uuid NOT NULL,
 	code varchar NOT NULL,
 	name varchar not null,
+	properties jsonb NOT NULL,
 	CONSTRAINT pk_channels PRIMARY KEY (id),
 	CONSTRAINT ux_channels_code UNIQUE (workspace_id, code),
 	CONSTRAINT channels_ws_fk FOREIGN KEY (workspace_id) REFERENCES workspaces(id)

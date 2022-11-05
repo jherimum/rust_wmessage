@@ -4,33 +4,26 @@ use uuid::Uuid;
 
 use schema::passwords::dsl::*;
 
-use crate::error::AppError;
-use crate::schema::{self, passwords};
-
 use super::user::User;
+use crate::schema::{self, passwords};
+use anyhow::{Error, Result};
 
-#[derive(Insertable, Queryable, Debug)]
+#[derive(Insertable, Debug)]
 pub struct Password {
     user_id: Uuid,
     hash: String,
 }
 
 impl Password {
-    pub fn create(
-        conn: &mut PgConnection,
-        user: &User,
-        _hash: &String,
-    ) -> Result<Password, AppError> {
+    pub fn create(conn: &mut PgConnection, user: &User, _hash: &String) -> Result<Password> {
         let p = Password {
             user_id: user.id(),
             hash: _hash.to_owned(),
         };
 
-        insert_into(passwords)
-            .values(&p)
-            .execute(conn)
-            .map_err(|e| AppError::DatabaseError(e))?;
-
-        Ok(p)
+        match insert_into(passwords).values(&p).execute(conn) {
+            Ok(i) => Ok(p),
+            Err(e) => Err(Error::new(e)),
+        }
     }
 }

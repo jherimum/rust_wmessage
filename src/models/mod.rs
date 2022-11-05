@@ -1,4 +1,4 @@
-mod apiKey;
+pub mod apiKey;
 pub mod apikey;
 pub mod channel;
 pub mod password;

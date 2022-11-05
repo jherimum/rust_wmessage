@@ -1,4 +1,5 @@
-pub mod handlers;
+pub mod routes;
+
 use crate::config::DbPool;
 
 pub struct State {
