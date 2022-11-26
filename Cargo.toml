@@ -31,3 +31,6 @@ thiserror = "1"
 
 actix-web-validator = "5"
 validator = { version = "0.16", features = ["derive"] }
+
+lettre = "0.10"
+handlebars = "4"

@@ -1,13 +1,16 @@
+use std::collections::HashMap;
+
 use actix_web::get;
 use actix_web::middleware::Logger;
 use actix_web::web::Data;
 use actix_web::{App, HttpServer};
 
 use anyhow::{Context, Result};
-use thiserror::Error;
 use wmessage::app::routes::registrations::register;
 use wmessage::app::State;
 use wmessage::config::AppConfig;
+use wmessage::plugins::smtp;
+use wmessage::plugins::ConnectorPlugins;
 
 #[actix_web::main]
 async fn main() -> Result<()> {
@@ -23,7 +26,10 @@ async fn main() -> Result<()> {
         App::new()
             .wrap(Logger::default())
             //.wrap(TracingLogger::default())
-            .app_data(Data::new(State { pool: pool.clone() }))
+            .app_data(Data::new(State {
+                pool: pool.clone(),
+                plugins: ConnectorPlugins::new(vec![Box::new(smtp::Plugin::new())]),
+            }))
             .service(register)
         //.service(register)
     })
