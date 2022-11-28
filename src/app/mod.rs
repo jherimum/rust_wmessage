@@ -1,9 +1,11 @@
 pub mod routes;
 
+use std::collections::HashMap;
+
 use crate::config::DbPool;
-use crate::plugins::{ConnectorPlugin, ConnectorPlugins};
+use crate::plugins::ConnectorPlugin;
 
 pub struct State {
     pub pool: DbPool,
-    pub plugins: ConnectorPlugins,
+    pub plugins: HashMap<String, Box<dyn ConnectorPlugin>>,
 }

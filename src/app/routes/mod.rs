@@ -1,4 +1,5 @@
 pub mod apikey;
+pub mod plugins;
 pub mod registrations;
 
 /*

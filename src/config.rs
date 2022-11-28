@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use diesel::{r2d2::ConnectionManager, PgConnection};
 use dotenv::dotenv;
 use log::info;
@@ -5,6 +7,8 @@ use r2d2::Pool;
 use serde::Deserialize;
 
 use anyhow::{Context, Result};
+
+use crate::plugins::ConnectorPlugin;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct AppConfig {
@@ -34,5 +38,17 @@ impl AppConfig {
         Pool::builder()
             .build(manager)
             .context("error while building connection pool")
+    }
+
+    pub fn plugins(
+        plugins: Vec<Box<dyn ConnectorPlugin>>,
+    ) -> HashMap<String, Box<dyn ConnectorPlugin>> {
+        let mut map: HashMap<String, Box<dyn ConnectorPlugin>> = HashMap::new();
+
+        for b in plugins {
+            map.insert(b.name(), b);
+        }
+
+        map
     }
 }

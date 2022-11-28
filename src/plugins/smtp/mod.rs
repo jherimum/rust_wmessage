@@ -1,9 +1,8 @@
-use std::collections::HashMap;
-use std::fmt::Debug;
-
 use lettre::transport::smtp::authentication::Credentials;
 use lettre::{Message, SmtpTransport, Transport};
 use serde::Deserialize;
+use std::collections::HashMap;
+use std::fmt::Debug;
 
 use super::{ConnectorPlugin, DispatchType, DispatcherPlugin, Property};
 
@@ -11,6 +10,7 @@ const MAIL_SMTP_HOST: &str = "mail.smtp.host";
 const MAIL_SMTP_PORT: &str = "mail.smtp.port";
 const MAIL_SMTP_AUTH_USERNAME: &str = "mail.smtp.auth.username";
 const MAIL_SMTP_AUTH_PASSWORD: &str = "mail.smtp.auth.password";
+const MAIL_SMTP_FROM: &str = "mail.smtp.from";
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct ConnectorProperties {
@@ -27,36 +27,29 @@ pub struct ConnectorProperties {
     password: String,
 }
 
-pub struct Plugin {
+#[derive(Clone)]
+pub struct StmpPlugin {
     properties: Vec<Property>,
     smtpPlugin: EmailDispatcher,
 }
 
-impl Plugin {
+impl StmpPlugin {
     pub fn new() -> Self {
-        Plugin {
+        StmpPlugin {
             properties: vec![
-                Property::new(String::from(MAIL_SMTP_HOST), String::from("host"), true),
-                Property::new(String::from(MAIL_SMTP_PORT), String::from("port"), true),
-                Property::new(
-                    String::from(MAIL_SMTP_AUTH_USERNAME),
-                    String::from("username"),
-                    true,
-                ),
-                Property::new(
-                    String::from(MAIL_SMTP_AUTH_PASSWORD),
-                    String::from("password"),
-                    true,
-                ),
+                Property::new(MAIL_SMTP_HOST, "host", true),
+                Property::new(MAIL_SMTP_PORT, "port", true),
+                Property::new(MAIL_SMTP_AUTH_USERNAME, "username", true),
+                Property::new(MAIL_SMTP_AUTH_PASSWORD, "password", true),
             ],
             smtpPlugin: EmailDispatcher::new(),
         }
     }
 }
 
-impl ConnectorPlugin for Plugin {
+impl ConnectorPlugin for StmpPlugin {
     fn name(&self) -> String {
-        String::from("smtp")
+        "smtp".to_string()
     }
 
     fn properties(&self) -> Vec<Property> {
@@ -71,14 +64,13 @@ impl ConnectorPlugin for Plugin {
         );
         map
     }
-    /*
-    fn get_dispatcher(&self, d_type: super::DispatchType) -> Option<Box<dyn Dispatcher>> {
-        match d_type {
-            super::DispatchType::EMAIl => Some(Box::new(EmailDispatcher::new())),
+
+    fn dispatcher(&self, t: DispatchType) -> Option<&dyn DispatcherPlugin> {
+        match t {
+            DispatchType::EMAIl => Some(&self.smtpPlugin),
             _ => None,
         }
     }
-    */
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -95,11 +87,7 @@ struct EmailDispatcher {
 impl EmailDispatcher {
     fn new() -> Self {
         EmailDispatcher {
-            properties: vec![Property::new(
-                String::from("mail.smtp.from"),
-                String::from("description"),
-                true,
-            )],
+            properties: vec![Property::new(MAIL_SMTP_FROM, "from email", true)],
         }
     }
 }
@@ -114,7 +102,7 @@ impl DispatcherPlugin for EmailDispatcher {
         let disp_props: DispatcherProprepties = req.dispatcher_props()?;
 
         let email = Message::builder()
-            .from("NoBody <nobody@domain.tld>".parse().unwrap())
+            .from(disp_props.from.parse().unwrap())
             .reply_to("Yuin <yuin@domain.tld>".parse().unwrap())
             .to("Hei <hei@domain.tld>".parse().unwrap())
             .subject("Happy new year")
@@ -135,5 +123,16 @@ impl DispatcherPlugin for EmailDispatcher {
             Ok(r) => Ok(super::Response),
             Err(e) => Err(anyhow::Error::new(e)),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_new_smtp() {
+        let p = StmpPlugin::new();
+        assert_eq!(p.properties().len(), 4);
     }
 }
