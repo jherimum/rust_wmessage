@@ -8,7 +8,7 @@ use wmessage::app::routes;
 use wmessage::app::routes::registrations::register;
 use wmessage::app::State;
 use wmessage::config::AppConfig;
-use wmessage::plugins::smtp;
+use wmessage::plugins::{smtp, ConnectorPlugins};
 
 #[actix_web::main]
 async fn main() -> Result<()> {
@@ -30,7 +30,7 @@ async fn main() -> Result<()> {
             //.wrap(TracingLogger::default())
             .app_data(Data::new(State {
                 pool: pool.clone(),
-                plugins: AppConfig::plugins(vec![Box::new(smtp_plugin.clone())]),
+                plugins: ConnectorPlugins::new(vec![Box::new(smtp_plugin.clone())]), //AppConfig::plugins(vec![Box::new(smtp_plugin.clone())]),
             }))
             .service(register)
             .service(routes::plugins::get)

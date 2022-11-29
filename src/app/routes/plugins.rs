@@ -19,7 +19,7 @@ struct Dispatcher {
     properties: Vec<Property>,
 }
 
-fn dispatchers(p: &Box<dyn ConnectorPlugin>) -> Vec<Dispatcher> {
+fn dispatchers(p: &dyn ConnectorPlugin) -> Vec<Dispatcher> {
     p.dispatchers()
         .values()
         .map(|d| Dispatcher {
@@ -35,7 +35,7 @@ pub async fn get(app_state: Data<State>) -> impl Responder {
 
     let mut response = Vec::new();
 
-    for p in plugins.values() {
+    for p in plugins.all() {
         response.push(Plugin {
             name: p.name(),
             properties: p.properties(),

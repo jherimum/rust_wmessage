@@ -1,11 +1,33 @@
 pub mod smtp;
-use std::collections::HashMap;
+use std::{collections::HashMap, ops::Deref};
 
 use anyhow::{Context, Result};
-use dyn_clone::DynClone;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
-pub trait ConnectorPlugin: DynClone + Send + Sync {
+pub struct ConnectorPlugins {
+    plugins: HashMap<String, Box<dyn ConnectorPlugin>>,
+}
+
+impl ConnectorPlugins {
+    pub fn new(plugins: Vec<Box<dyn ConnectorPlugin>>) -> Self {
+        let mut map = HashMap::new();
+
+        for p in plugins {
+            map.insert(p.name(), p);
+        }
+        ConnectorPlugins { plugins: map }
+    }
+
+    pub fn get(&self, name: String) -> Option<&dyn ConnectorPlugin> {
+        self.plugins.get(&name).map(|f| f.deref())
+    }
+
+    pub fn all(&self) -> Vec<&dyn ConnectorPlugin> {
+        self.plugins.values().map(|f| f.deref()).collect()
+    }
+}
+
+pub trait ConnectorPlugin {
     fn name(&self) -> String;
     fn properties(&self) -> Vec<Property>;
     fn dispatchers(&self) -> HashMap<DispatchType, &dyn DispatcherPlugin>;

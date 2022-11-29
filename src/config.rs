@@ -39,16 +39,4 @@ impl AppConfig {
             .build(manager)
             .context("error while building connection pool")
     }
-
-    pub fn plugins(
-        plugins: Vec<Box<dyn ConnectorPlugin>>,
-    ) -> HashMap<String, Box<dyn ConnectorPlugin>> {
-        let mut map: HashMap<String, Box<dyn ConnectorPlugin>> = HashMap::new();
-
-        for b in plugins {
-            map.insert(b.name(), b);
-        }
-
-        map
-    }
 }
