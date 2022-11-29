@@ -65,9 +65,9 @@ impl ConnectorPlugin for StmpPlugin {
         map
     }
 
-    fn dispatcher(&self, t: DispatchType) -> Option<&dyn DispatcherPlugin> {
+    fn dispatcher(&self, t: DispatchType) -> Option<Box<dyn DispatcherPlugin>> {
         match t {
-            DispatchType::EMAIl => Some(&self.smtpPlugin),
+            DispatchType::EMAIl => Some(Box::new(self.smtpPlugin.clone())),
             _ => None,
         }
     }
@@ -93,6 +93,10 @@ impl EmailDispatcher {
 }
 
 impl DispatcherPlugin for EmailDispatcher {
+    fn r#type(&self) -> DispatchType {
+        DispatchType::EMAIl
+    }
+
     fn properties(&self) -> Vec<Property> {
         self.properties.clone()
     }

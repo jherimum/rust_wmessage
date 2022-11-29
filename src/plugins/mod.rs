@@ -1,5 +1,5 @@
 pub mod smtp;
-use std::collections::HashMap;
+use std::{collections::HashMap, ops::Deref};
 
 use anyhow::{Context, Result};
 use dyn_clone::DynClone;
@@ -9,7 +9,7 @@ pub trait ConnectorPlugin: DynClone + Send + Sync {
     fn name(&self) -> String;
     fn properties(&self) -> Vec<Property>;
     fn dispatchers(&self) -> HashMap<DispatchType, Box<dyn DispatcherPlugin>>;
-    fn dispatcher(&self, t: DispatchType) -> Option<&dyn DispatcherPlugin>;
+    fn dispatcher(&self, t: DispatchType) -> Option<Box<dyn DispatcherPlugin>>;
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
@@ -30,6 +30,7 @@ impl Property {
 }
 
 pub trait DispatcherPlugin {
+    fn r#type(&self) -> DispatchType;
     fn dispatch(&self, req: Request) -> Result<Response>;
     fn properties(&self) -> Vec<Property>;
 }

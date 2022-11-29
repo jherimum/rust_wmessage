@@ -1,11 +1,10 @@
-use std::collections::HashMap;
-
 use actix_web::get;
 use actix_web::middleware::Logger;
 use actix_web::web::Data;
 use actix_web::{App, HttpServer};
 
 use anyhow::{Context, Result};
+use wmessage::app::routes;
 use wmessage::app::routes::registrations::register;
 use wmessage::app::State;
 use wmessage::config::AppConfig;
@@ -14,12 +13,16 @@ use wmessage::plugins::smtp;
 #[actix_web::main]
 async fn main() -> Result<()> {
     env_logger::init_from_env(env_logger::Env::default().default_filter_or("debug"));
+
     let config =
         AppConfig::from_env().context("error while creating app config from environmeet")?;
+
     let pool = config
         .create_pool()
         .await
         .context("error while creating pool ")?;
+
+    let smtp_plugin = smtp::StmpPlugin::new();
 
     HttpServer::new(move || {
         App::new()
@@ -27,9 +30,10 @@ async fn main() -> Result<()> {
             //.wrap(TracingLogger::default())
             .app_data(Data::new(State {
                 pool: pool.clone(),
-                plugins: AppConfig::plugins(vec![Box::new(smtp::StmpPlugin::new())]),
+                plugins: AppConfig::plugins(vec![Box::new(smtp_plugin.clone())]),
             }))
             .service(register)
+            .service(routes::plugins::get)
         //.service(register)
     })
     .bind((config.host, config.port))?

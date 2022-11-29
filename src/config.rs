@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, ops::Deref};
 
 use diesel::{r2d2::ConnectionManager, PgConnection};
 use dotenv::dotenv;
