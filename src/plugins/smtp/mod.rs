@@ -30,7 +30,7 @@ pub struct ConnectorProperties {
 #[derive(Clone)]
 pub struct StmpPlugin {
     properties: Vec<Property>,
-    smtpPlugin: EmailDispatcher,
+    smtp_plugin: EmailDispatcher,
 }
 
 impl StmpPlugin {
@@ -42,7 +42,7 @@ impl StmpPlugin {
                 Property::new(MAIL_SMTP_AUTH_USERNAME, "username", true),
                 Property::new(MAIL_SMTP_AUTH_PASSWORD, "password", true),
             ],
-            smtpPlugin: EmailDispatcher::new(),
+            smtp_plugin: EmailDispatcher::new(),
         }
     }
 }
@@ -60,14 +60,14 @@ impl ConnectorPlugin for StmpPlugin {
         let mut map: HashMap<DispatchType, Box<dyn DispatcherPlugin>> = HashMap::new();
         map.insert(
             super::DispatchType::EMAIl,
-            Box::new(self.smtpPlugin.clone()),
+            Box::new(self.smtp_plugin.clone()),
         );
         map
     }
 
     fn dispatcher(&self, t: DispatchType) -> Option<Box<dyn DispatcherPlugin>> {
         match t {
-            DispatchType::EMAIl => Some(Box::new(self.smtpPlugin.clone())),
+            DispatchType::EMAIl => Some(Box::new(self.smtp_plugin.clone())),
             _ => None,
         }
     }
