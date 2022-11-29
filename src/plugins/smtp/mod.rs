@@ -56,18 +56,15 @@ impl ConnectorPlugin for StmpPlugin {
         self.properties.clone()
     }
 
-    fn dispatchers(&self) -> std::collections::HashMap<DispatchType, Box<dyn DispatcherPlugin>> {
-        let mut map: HashMap<DispatchType, Box<dyn DispatcherPlugin>> = HashMap::new();
-        map.insert(
-            super::DispatchType::EMAIl,
-            Box::new(self.smtp_plugin.clone()),
-        );
+    fn dispatchers(&self) -> std::collections::HashMap<DispatchType, &dyn DispatcherPlugin> {
+        let mut map: HashMap<DispatchType, &dyn DispatcherPlugin> = HashMap::new();
+        map.insert(super::DispatchType::EMAIl, &self.smtp_plugin);
         map
     }
 
-    fn dispatcher(&self, t: DispatchType) -> Option<Box<dyn DispatcherPlugin>> {
+    fn dispatcher(&self, t: DispatchType) -> Option<&dyn DispatcherPlugin> {
         match t {
-            DispatchType::EMAIl => Some(Box::new(self.smtp_plugin.clone())),
+            DispatchType::EMAIl => Some(&self.smtp_plugin),
             _ => None,
         }
     }

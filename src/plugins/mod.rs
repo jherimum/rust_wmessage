@@ -1,5 +1,5 @@
 pub mod smtp;
-use std::{collections::HashMap, ops::Deref};
+use std::collections::HashMap;
 
 use anyhow::{Context, Result};
 use dyn_clone::DynClone;
@@ -8,8 +8,10 @@ use serde::{de::DeserializeOwned, Deserialize, Serialize};
 pub trait ConnectorPlugin: DynClone + Send + Sync {
     fn name(&self) -> String;
     fn properties(&self) -> Vec<Property>;
-    fn dispatchers(&self) -> HashMap<DispatchType, Box<dyn DispatcherPlugin>>;
-    fn dispatcher(&self, t: DispatchType) -> Option<Box<dyn DispatcherPlugin>>;
+    fn dispatchers(&self) -> HashMap<DispatchType, &dyn DispatcherPlugin>;
+    fn dispatcher(&self, t: DispatchType) -> Option<&dyn DispatcherPlugin> {
+        self.dispatchers().get(&t).map(|f| *f)
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
