@@ -31,6 +31,7 @@ thiserror = "1"
 actix-web-validator = "5"
 validator = {version = "0.16", features = ["derive"]}
 
+diesel_migrations = "2"
 handlebars = "4"
 lettre = "0.10"
 mockall = "0.11"

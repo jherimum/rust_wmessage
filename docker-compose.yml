@@ -1,7 +1,7 @@
 version: '3'
 
 services:
-  db:
+  db-it:
     image: postgres
     environment:
       POSTGRES_PASSWORD: wmessage
@@ -11,6 +11,18 @@ services:
       PGTZ: 'GMT-3'
     ports:
       - 5432:5432
+    networks:
+      - local-network
+  db:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: wmessage
+      POSTGRES_USER: wmessage
+      POSTGRES_SCHEMA: wmessage
+      TZ: 'GMT-3'
+      PGTZ: 'GMT-3'
+    ports:
+      - 6543:5432
     networks:
       - local-network
 networks:
