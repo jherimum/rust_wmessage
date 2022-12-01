@@ -1,9 +1,8 @@
 use std::ops::Deref;
 
 use actix_web::{
-    get,
-    web::{self, Data},
-    HttpResponse, Responder,
+    web::{self, get, resource, Data},
+    HttpResponse, Responder, Scope,
 };
 use serde::Serialize;
 
@@ -48,8 +47,13 @@ impl Dispatcher {
     }
 }
 
-#[get("/api/plugins")]
-pub async fn all(plugins: Data<ConnectorPlugins>) -> impl Responder {
+pub fn routes() -> Scope {
+    Scope::new("/plugins")
+        .service(resource("").route(get().to(all)))
+        .service(resource("/{name}").route(get().to(find_one)))
+}
+
+async fn all(plugins: Data<ConnectorPlugins>) -> HttpResponse {
     let body = plugins
         .all()
         .iter()
@@ -59,8 +63,7 @@ pub async fn all(plugins: Data<ConnectorPlugins>) -> impl Responder {
     HttpResponse::Ok().json(body)
 }
 
-#[get("/api/plugins/{name}")]
-pub async fn find_one(plugins: Data<ConnectorPlugins>, name: web::Path<String>) -> impl Responder {
+async fn find_one(plugins: Data<ConnectorPlugins>, name: web::Path<String>) -> HttpResponse {
     let pl = plugins.get(name.into_inner()).map(|p| Plugin::new(p));
     match pl {
         Some(pl) => HttpResponse::Ok().json(pl),

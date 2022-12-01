@@ -1,11 +1,10 @@
-use actix_web::get;
 use actix_web::middleware::Logger;
-use actix_web::web::Data;
-use actix_web::{App, HttpServer};
+use actix_web::web::{self, scope, Data};
+use actix_web::{App, HttpResponse, HttpServer};
 
 use anyhow::{Context, Result};
-use wmessage::app::routes;
-use wmessage::app::routes::registrations::register;
+use wmessage::app::routes::registrations::{self};
+use wmessage::app::routes::{connections, plugins};
 use wmessage::config::AppConfig;
 use wmessage::plugins::{smtp, ConnectorPlugins};
 
@@ -31,11 +30,13 @@ async fn main() -> Result<()> {
             .app_data(Data::new(ConnectorPlugins::new(vec![Box::new(
                 smtp_plugin.clone(),
             )])))
-            .service(register)
-            .service(routes::plugins::all)
-            .service(routes::plugins::find_one)
-
-        //.service(register)
+            .service(
+                scope("/api")
+                    .service(plugins::routes())
+                    .service(registrations::routes())
+                    .service(web::resource("").route(web::get().to(index)))
+                    .service(scope("/workspaces/{ws_id}").service(connections::routes())),
+            )
     })
     .bind((config.host, config.port))?
     .run()
@@ -44,7 +45,6 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-#[get("/")]
-async fn index() -> String {
-    format!("{}", "index")
+async fn index() -> HttpResponse {
+    HttpResponse::Ok().finish()
 }
