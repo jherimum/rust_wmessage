@@ -7,7 +7,7 @@ use serde::Deserialize;
 use validator::Validate;
 
 use crate::{
-    app::State,
+    config::DbPool,
     models::{password::Password, user::User, workspace::Workspace},
 };
 
@@ -20,9 +20,9 @@ pub struct RegistrationForm {
 }
 
 #[post("/api/registrations")]
-pub async fn register(app_state: Data<State>, body: Json<RegistrationForm>) -> impl Responder {
+pub async fn register(pool: Data<DbPool>, body: Json<RegistrationForm>) -> impl Responder {
     let form = body.into_inner();
-    let mut conn = app_state.pool.get().unwrap();
+    let mut conn = pool.get().unwrap();
 
     let x = conn.transaction::<(), anyhow::Error, _>(|conn| {
         let ws = Workspace::create(conn, &form.workspace_code)?;

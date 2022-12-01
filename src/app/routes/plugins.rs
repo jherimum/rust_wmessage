@@ -7,10 +7,7 @@ use actix_web::{
 };
 use serde::Serialize;
 
-use crate::{
-    app::State,
-    plugins::{ConnectorPlugin, ConnectorPlugins, DispatchType, DispatcherPlugin, Property},
-};
+use crate::plugins::{ConnectorPlugin, ConnectorPlugins, DispatchType, DispatcherPlugin, Property};
 
 #[derive(Serialize)]
 struct Plugin {

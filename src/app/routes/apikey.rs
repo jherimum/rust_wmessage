@@ -9,7 +9,7 @@ use rand::distributions::Alphanumeric;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    app::State,
+    config::DbPool,
     models::{apikey::ApiKey, workspace::Workspace},
 };
 use rand::distributions::DistString;
@@ -32,11 +32,11 @@ struct ApiKeyResponse {
 
 #[post("/api/worspaces/{ws_id}/apikeys")]
 pub async fn register(
-    appState: Data<State>,
+    pool: Data<DbPool>,
     body: web::Json<ApiKeyForm>,
     path: web::Path<Uuid>,
 ) -> impl Responder {
-    let mut conn = appState.pool.get().expect("msg");
+    let mut conn = pool.get().expect("msg");
 
     let ws_id = path.into_inner();
     let form = body.into_inner();
