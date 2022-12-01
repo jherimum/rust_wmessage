@@ -9,7 +9,6 @@ use validator::Validate;
 use crate::{
     app::State,
     models::{password::Password, user::User, workspace::Workspace},
-    plugins::ConnectorPlugin,
 };
 
 #[derive(Deserialize, Debug, Validate)]

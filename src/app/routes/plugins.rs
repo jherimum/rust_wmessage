@@ -1,9 +1,15 @@
-use actix_web::{get, web::Data, HttpResponse, Responder};
+use std::ops::Deref;
+
+use actix_web::{
+    get,
+    web::{self, Data},
+    HttpResponse, Responder,
+};
 use serde::Serialize;
 
 use crate::{
     app::State,
-    plugins::{ConnectorPlugin, DispatchType, Property},
+    plugins::{ConnectorPlugin, ConnectorPlugins, DispatchType, DispatcherPlugin, Property},
 };
 
 #[derive(Serialize)]
@@ -13,35 +19,54 @@ struct Plugin {
     dispatchers: Vec<Dispatcher>,
 }
 
+impl Plugin {
+    fn new(p: &dyn ConnectorPlugin) -> Self {
+        Plugin {
+            name: p.name(),
+            properties: p.properties(),
+            dispatchers: Plugin::dispatchers(p.deref()),
+        }
+    }
+
+    fn dispatchers(p: &dyn ConnectorPlugin) -> Vec<Dispatcher> {
+        p.dispatchers()
+            .values()
+            .map(|d| Dispatcher::new(*d))
+            .collect()
+    }
+}
+
 #[derive(Serialize)]
 struct Dispatcher {
     r#type: DispatchType,
     properties: Vec<Property>,
 }
 
-fn dispatchers(p: &dyn ConnectorPlugin) -> Vec<Dispatcher> {
-    p.dispatchers()
-        .values()
-        .map(|d| Dispatcher {
+impl Dispatcher {
+    fn new(d: &dyn DispatcherPlugin) -> Self {
+        Dispatcher {
             r#type: d.r#type(),
             properties: d.properties(),
-        })
-        .collect()
+        }
+    }
 }
 
 #[get("/api/plugins")]
-pub async fn get(app_state: Data<State>) -> impl Responder {
-    let plugins = &app_state.plugins;
+pub async fn all(plugins: Data<ConnectorPlugins>) -> impl Responder {
+    let body = plugins
+        .all()
+        .iter()
+        .map(|p| Plugin::new(*p))
+        .collect::<Vec<Plugin>>();
 
-    let mut response = Vec::new();
+    HttpResponse::Ok().json(body)
+}
 
-    for p in plugins.all() {
-        response.push(Plugin {
-            name: p.name(),
-            properties: p.properties(),
-            dispatchers: dispatchers(p),
-        })
+#[get("/api/plugins/{name}")]
+pub async fn find_one(plugins: Data<ConnectorPlugins>, name: web::Path<String>) -> impl Responder {
+    let pl = plugins.get(name.into_inner()).map(|p| Plugin::new(p));
+    match pl {
+        Some(pl) => HttpResponse::Ok().json(pl),
+        _ => HttpResponse::NotFound().finish(),
     }
-
-    HttpResponse::Ok().json(response)
 }

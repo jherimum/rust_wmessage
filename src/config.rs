@@ -1,5 +1,3 @@
-use std::{collections::HashMap, ops::Deref};
-
 use diesel::{r2d2::ConnectionManager, PgConnection};
 use dotenv::dotenv;
 use log::info;
@@ -7,8 +5,6 @@ use r2d2::Pool;
 use serde::Deserialize;
 
 use anyhow::{Context, Result};
-
-use crate::plugins::ConnectorPlugin;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct AppConfig {

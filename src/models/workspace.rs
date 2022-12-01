@@ -7,7 +7,7 @@ use diesel::prelude::*;
 use diesel::OptionalExtension;
 use schema::workspaces::dsl::*;
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result};
 
 use thiserror::Error;
 

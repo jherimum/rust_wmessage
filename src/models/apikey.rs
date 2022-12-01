@@ -6,7 +6,6 @@ use diesel::prelude::*;
 use crate::schema::api_keys;
 
 use super::workspace::Workspace;
-use anyhow::{Context, Result};
 
 #[derive(Insertable, Queryable, Identifiable, Debug, Clone)]
 #[diesel(table_name = api_keys)]

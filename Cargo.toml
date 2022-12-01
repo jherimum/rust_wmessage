@@ -33,3 +33,4 @@ validator = {version = "0.16", features = ["derive"]}
 
 handlebars = "4"
 lettre = "0.10"
+mockall = "0.11"

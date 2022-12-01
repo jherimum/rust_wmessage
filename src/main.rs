@@ -6,7 +6,6 @@ use actix_web::{App, HttpServer};
 use anyhow::{Context, Result};
 use wmessage::app::routes;
 use wmessage::app::routes::registrations::register;
-use wmessage::app::State;
 use wmessage::config::AppConfig;
 use wmessage::plugins::{smtp, ConnectorPlugins};
 
@@ -28,12 +27,14 @@ async fn main() -> Result<()> {
         App::new()
             .wrap(Logger::default())
             //.wrap(TracingLogger::default())
-            .app_data(Data::new(State {
-                pool: pool.clone(),
-                plugins: ConnectorPlugins::new(vec![Box::new(smtp_plugin.clone())]), //AppConfig::plugins(vec![Box::new(smtp_plugin.clone())]),
-            }))
+            .app_data(Data::new(pool.clone()))
+            .app_data(Data::new(ConnectorPlugins::new(vec![Box::new(
+                smtp_plugin.clone(),
+            )])))
             .service(register)
-            .service(routes::plugins::get)
+            .service(routes::plugins::all)
+            .service(routes::plugins::find_one)
+
         //.service(register)
     })
     .bind((config.host, config.port))?
