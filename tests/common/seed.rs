@@ -8,3 +8,9 @@ pub fn new_workspace(conn: &mut PgConnection, id: uuid::Uuid, code: &str) {
 
     diesel::sql_query(sql).execute(conn).unwrap();
 }
+
+pub fn new_workspaces(conn: &mut PgConnection, ws: Vec<(uuid::Uuid, &str)>) {
+    for (id, code) in ws {
+        new_workspace(conn, id, code)
+    }
+}

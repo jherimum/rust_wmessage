@@ -11,13 +11,13 @@ use anyhow::{Context, Result};
 
 use thiserror::Error;
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, PartialEq)]
 pub enum Error {
-    #[error("data store disconnected")]
-    WS_001 { _code: String },
+    #[error("A Workspace with code already exists")]
+    WS001 { _code: String },
 }
 
-#[derive(Insertable, Queryable, Identifiable, Debug, Clone)]
+#[derive(Insertable, Queryable, Identifiable, Debug, Clone, PartialEq)]
 #[diesel(table_name = workspaces)]
 pub struct Workspace {
     id: Uuid,
@@ -25,6 +25,13 @@ pub struct Workspace {
 }
 
 impl Workspace {
+    pub fn new(ws_id: Uuid, ws_code: &str) -> Self {
+        Workspace {
+            id: ws_id,
+            code: ws_code.to_string(),
+        }
+    }
+
     pub fn find(conn: &mut PgConnection, ws_id: &Uuid) -> Result<Option<Workspace>> {
         workspaces
             .filter(id.eq(ws_id))
@@ -37,7 +44,7 @@ impl Workspace {
         self.id
     }
 
-    fn exists_code(conn: &mut PgConnection, _code: &String) -> Result<bool> {
+    pub fn exists_code(conn: &mut PgConnection, _code: &str) -> Result<bool> {
         workspaces::table
             .filter(code.eq(_code))
             .count()
@@ -46,18 +53,15 @@ impl Workspace {
             .context("database error")
     }
 
-    pub fn create(conn: &mut PgConnection, _code: &String) -> Result<Workspace> {
+    pub fn create(conn: &mut PgConnection, _code: &str) -> Result<Workspace> {
         if Workspace::exists_code(conn, _code)? {
-            let error = anyhow::Error::new(Error::WS_001 {
+            let error = anyhow::Error::new(Error::WS001 {
                 _code: _code.to_owned(),
             });
             return Err(error);
         }
 
-        let ws = Workspace {
-            id: Uuid::new_v4(),
-            code: _code.to_owned(),
-        };
+        let ws = Self::new(Uuid::new_v4(), _code);
 
         insert_into(schema::workspaces::dsl::workspaces)
             .values(&ws)

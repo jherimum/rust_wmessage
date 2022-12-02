@@ -1,4 +1,4 @@
-pub mod database;
+pub mod seed;
 
 use diesel::{Connection, PgConnection, RunQueryDsl};
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
