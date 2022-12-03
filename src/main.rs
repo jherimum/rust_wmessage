@@ -8,6 +8,8 @@ use wmessage::app::routes::{connections, plugins};
 use wmessage::config::AppConfig;
 use wmessage::plugins::{smtp, ConnectorPlugins};
 
+extern crate lazy_static;
+
 #[actix_web::main]
 async fn main() -> Result<()> {
     env_logger::init_from_env(env_logger::Env::default().default_filter_or("debug"));

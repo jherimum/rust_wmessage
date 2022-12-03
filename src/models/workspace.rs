@@ -1,3 +1,4 @@
+use anyhow::bail;
 use diesel::{insert_into, PgConnection};
 use uuid::Uuid;
 
@@ -9,12 +10,14 @@ use schema::workspaces::dsl::*;
 
 use anyhow::{Context, Result};
 
-use thiserror::Error;
+pub mod error {
+    use thiserror::Error;
 
-#[derive(Error, Debug, PartialEq)]
-pub enum Error {
-    #[error("A Workspace with code already exists")]
-    WS001 { _code: String },
+    #[derive(Error, Debug, PartialEq)]
+    pub enum Error {
+        #[error("A Workspace with code already exists")]
+        WS001 { _code: String },
+    }
 }
 
 #[derive(Insertable, Queryable, Identifiable, Debug, Clone, PartialEq)]
@@ -37,7 +40,7 @@ impl Workspace {
             .filter(id.eq(ws_id))
             .first::<Workspace>(conn)
             .optional()
-            .context("database error")
+            .context("Database error")
     }
 
     pub fn id(&self) -> Uuid {
@@ -50,24 +53,32 @@ impl Workspace {
             .count()
             .get_result::<i64>(conn)
             .map(|count| count > 0)
-            .context("database error")
+            .context("Database error")
     }
 
     pub fn create(conn: &mut PgConnection, _code: &str) -> Result<Workspace> {
         if Workspace::exists_code(conn, _code)? {
-            let error = anyhow::Error::new(Error::WS001 {
+            bail!(error::Error::WS001 {
                 _code: _code.to_owned(),
             });
-            return Err(error);
         }
 
         let ws = Self::new(Uuid::new_v4(), _code);
 
-        insert_into(schema::workspaces::dsl::workspaces)
+        let rows_inserted: usize = insert_into(schema::workspaces::dsl::workspaces)
             .values(&ws)
             .execute(conn)
-            .context("database error")?;
+            .context("Database error")?;
 
-        Ok(ws)
+        match rows_inserted {
+            1 => Ok(ws),
+            _ => bail!("The workspace could not be inserted"),
+        }
     }
+}
+
+pub enum LogLevel {
+    Info,
+    Warning,
+    Error,
 }

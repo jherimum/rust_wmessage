@@ -22,7 +22,7 @@ impl Password {
         };
 
         match insert_into(passwords).values(&p).execute(conn) {
-            Ok(i) => Ok(p),
+            Ok(_) => Ok(p),
             Err(e) => Err(Error::new(e)),
         }
     }
