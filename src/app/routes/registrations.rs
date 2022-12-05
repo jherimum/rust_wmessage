@@ -11,11 +11,7 @@ use validator::Validate;
 
 use crate::{
     config::DbPool,
-    models::{
-        password::Password,
-        user::User,
-        workspace::{error::Error, Workspace},
-    },
+    models::{password::Password, user::User, workspace::Workspace, Error},
 };
 
 use crate::commons::validators::validate_password;
@@ -50,10 +46,12 @@ async fn register(pool: Data<DbPool>, body: Json<RegistrationForm>) -> HttpRespo
 
     match r {
         Ok(_) => HttpResponse::Ok().finish(),
-        Err(e) => match e.downcast_ref::<Error>() {
-            Some(e) => HttpResponse::Conflict().finish(),
-            None => HttpResponse::InternalServerError().finish(),
-        },
+        Err(e) => {
+            if let Some(e) = e.downcast_ref::<Error>() {
+                return HttpResponse::Conflict().finish();
+            }
+            HttpResponse::InternalServerError().finish()
+        }
     }
 }
 

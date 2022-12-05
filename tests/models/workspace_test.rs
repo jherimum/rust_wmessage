@@ -1,7 +1,6 @@
 use anyhow::Result;
 use uuid::Uuid;
-use wmessage::models::workspace::error;
-use wmessage::models::workspace::Workspace;
+use wmessage::models::{workspace::Workspace, Error};
 
 use crate::common::{seed::new_workspace, TestContext};
 
@@ -41,14 +40,14 @@ fn test_ws_creation_when_exists_ws_with_same_code() {
     new_workspace(&mut conn, Uuid::new_v4(), "code");
 
     let r: Result<Workspace, anyhow::Error> = Workspace::create(&mut conn, code);
-    let expected_error = error::Error::WS001 {
-        _code: code.to_string(),
+    let expected_error = Error::WS001 {
+        code: code.to_string(),
     };
 
     match r {
         Ok(_) => assert!(false),
         Err(e) => {
-            assert_eq!(expected_error, e.downcast::<error::Error>().unwrap());
+            assert_eq!(expected_error, e.downcast::<Error>().unwrap());
         }
     }
 }

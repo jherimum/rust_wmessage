@@ -2,6 +2,7 @@ use anyhow::bail;
 use diesel::{insert_into, PgConnection};
 use uuid::Uuid;
 
+use crate::models::Error;
 use crate::schema::{self, workspaces};
 
 use diesel::prelude::*;
@@ -9,16 +10,6 @@ use diesel::OptionalExtension;
 use schema::workspaces::dsl::*;
 
 use anyhow::{Context, Result};
-
-pub mod error {
-    use thiserror::Error;
-
-    #[derive(Error, Debug, PartialEq)]
-    pub enum Error {
-        #[error("A Workspace with code already exists")]
-        WS001 { _code: String },
-    }
-}
 
 #[derive(Insertable, Queryable, Identifiable, Debug, Clone, PartialEq)]
 #[diesel(table_name = workspaces)]
@@ -58,8 +49,8 @@ impl Workspace {
 
     pub fn create(conn: &mut PgConnection, _code: &str) -> Result<Workspace> {
         if Workspace::exists_code(conn, _code)? {
-            bail!(error::Error::WS001 {
-                _code: _code.to_owned(),
+            bail!(Error::WS001 {
+                code: _code.to_owned(),
             });
         }
 
