@@ -5,22 +5,23 @@ CREATE TABLE workspaces (
 	CONSTRAINT ux_workspaces_code UNIQUE (code)
 );
 
+CREATE TABLE passwords (
+	id uuid NOT NULL,
+	hash varchar NOT NULL,
+	CONSTRAINT passwords_pk PRIMARY KEY (id)
+
+);
+
 CREATE TABLE users (
 	id uuid NOT NULL,
 	email varchar NOT NULL,
 	workspace_id uuid NOT NULL,
 	"owner" bool NOT NULL,
+	password_id uuid not null,
 	CONSTRAINT pk_users PRIMARY KEY (id),
 	CONSTRAINT ux_users_email_ws UNIQUE (email, workspace_id),
-	CONSTRAINT users_fk FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
-);
-
-
-CREATE TABLE passwords (
-	user_id uuid NOT NULL,
-	hash varchar NOT NULL,
-	CONSTRAINT passwords_pk PRIMARY KEY (user_id),
-	CONSTRAINT passwords_fk FOREIGN KEY (user_id) REFERENCES users(id)
+	CONSTRAINT users_fk FOREIGN KEY (workspace_id) REFERENCES workspaces(id),
+	CONSTRAINT password_fk FOREIGN KEY (password_id) REFERENCES passwords(id)
 );
 
 

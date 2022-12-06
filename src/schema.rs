@@ -39,8 +39,8 @@ diesel::table! {
 }
 
 diesel::table! {
-    passwords (user_id) {
-        user_id -> Uuid,
+    passwords (id) {
+        id -> Uuid,
         hash -> Varchar,
     }
 }
@@ -51,6 +51,7 @@ diesel::table! {
         email -> Varchar,
         workspace_id -> Uuid,
         owner -> Bool,
+        password_id -> Uuid,
     }
 }
 
@@ -64,7 +65,7 @@ diesel::table! {
 diesel::joinable!(channels -> workspaces (workspace_id));
 diesel::joinable!(message_type_versions -> message_types (message_type_id));
 diesel::joinable!(message_types -> channels (channel_id));
-diesel::joinable!(passwords -> users (user_id));
+diesel::joinable!(users -> passwords (password_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     api_keys,

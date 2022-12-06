@@ -4,8 +4,11 @@ use actix_web::{
     web::{self, Data, Json},
     HttpResponse, Scope,
 };
-use anyhow::Result;
+use anyhow::{anyhow, Context, Result};
+use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
 use diesel::Connection;
+use log::error;
+use rand::rngs::OsRng;
 use serde::Deserialize;
 use validator::Validate;
 
@@ -33,15 +36,25 @@ pub fn routes() -> Scope {
     Scope::new("/registrations").service(web::resource("").route(web::post().to(register)))
 }
 
+fn encrypt_password(password: &str) -> Result<(String, String)> {
+    let salt = SaltString::generate(&mut OsRng);
+    let argon = Argon2::default();
+    let hash = argon
+        .hash_password(password.as_bytes(), &salt)
+        .map_err(|e| anyhow!(e))?;
+
+    Ok((salt.to_string(), hash.to_string()))
+}
+
 async fn register(pool: Data<DbPool>, body: Json<RegistrationForm>) -> HttpResponse {
     let form = body.into_inner();
     let mut conn = pool.get().unwrap();
 
     let r: Result<()> = conn.transaction(|conn| {
         let ws = Workspace::create(conn, &form.workspace_code)?;
+        let _password = Password::create(conn, &form.user_password)?;
         let user = User::create_owner(conn, &ws, &form.user_email)?;
-        let _password = Password::create(conn, &user, &form.user_password);
-        Ok(())
+        anyhow::Ok(())
     });
 
     match r {
@@ -50,13 +63,27 @@ async fn register(pool: Data<DbPool>, body: Json<RegistrationForm>) -> HttpRespo
             if let Some(e) = e.downcast_ref::<Error>() {
                 return HttpResponse::Conflict().finish();
             }
-            HttpResponse::InternalServerError().finish()
+
+            let e: anyhow::Error = e;
+
+            error!("{}", e);
+            HttpResponse::InternalServerError().json(e.to_string())
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use passwords::hasher;
+
+    #[test]
+    fn test() {
+        let x = hasher::gen_salt();
+
+        let r = String::from_utf8_lossy(&x);
+
+        println!("{:?}", r);
+    }
 
     mod registration_form {
 
