@@ -9,14 +9,13 @@ CREATE TABLE passwords (
 	id uuid NOT NULL,
 	hash varchar NOT NULL,
 	CONSTRAINT passwords_pk PRIMARY KEY (id)
-
 );
 
 CREATE TABLE users (
 	id uuid NOT NULL,
 	email varchar NOT NULL,
 	workspace_id uuid NOT NULL,
-	"owner" bool NOT NULL,
+	owner boolean NOT NULL,
 	password_id uuid not null,
 	CONSTRAINT pk_users PRIMARY KEY (id),
 	CONSTRAINT ux_users_email_ws UNIQUE (email, workspace_id),

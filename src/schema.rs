@@ -50,8 +50,8 @@ diesel::table! {
         id -> Uuid,
         email -> Varchar,
         workspace_id -> Uuid,
-        owner -> Bool,
         password_id -> Uuid,
+        owner -> Bool,
     }
 }
 

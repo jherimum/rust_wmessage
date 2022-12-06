@@ -1,17 +1,19 @@
-use anyhow::bail;
+use diesel::prelude::*;
 use diesel::{insert_into, PgConnection};
 use uuid::Uuid;
 
 use crate::models::Error;
 use crate::schema::{self, workspaces};
 
-use diesel::prelude::*;
+use anyhow::Result;
+use anyhow::{bail, Context};
+
 use diesel::OptionalExtension;
 use schema::workspaces::dsl::*;
 
-use anyhow::{Context, Result};
+use super::user::User;
 
-#[derive(Insertable, Queryable, Identifiable, Debug, Clone, PartialEq)]
+#[derive(Insertable, Identifiable, Debug, Clone, PartialEq, Queryable)]
 #[diesel(table_name = workspaces)]
 pub struct Workspace {
     id: Uuid,
@@ -26,7 +28,14 @@ impl Workspace {
         }
     }
 
-    pub fn find(conn: &mut PgConnection, ws_id: &Uuid) -> Result<Option<Workspace>> {
+    pub fn owner(&self, conn: &mut PgConnection) -> Result<User> {
+        match User::ws_owner(conn, &self)? {
+            Some(u) => Ok(u),
+            None => bail!("owner not found"),
+        }
+    }
+
+    pub fn find(conn: &mut PgConnection, ws_id: &Uuid) -> anyhow::Result<Option<Workspace>> {
         workspaces
             .filter(id.eq(ws_id))
             .first::<Workspace>(conn)
@@ -66,10 +75,4 @@ impl Workspace {
             _ => bail!("The workspace could not be inserted"),
         }
     }
-}
-
-pub enum LogLevel {
-    Info,
-    Warning,
-    Error,
 }

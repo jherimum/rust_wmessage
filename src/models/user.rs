@@ -1,17 +1,15 @@
+use super::password::Password;
+use super::workspace::Workspace;
+use crate::schema::{self, users};
+use anyhow::bail;
+use anyhow::Context;
+use diesel::prelude::*;
 use diesel::{insert_into, PgConnection};
+use schema::users::dsl::*;
 use uuid::Uuid;
 
-use diesel::prelude::*;
-use schema::users::dsl::*;
-
-use crate::models::workspace::Workspace;
-use crate::schema::{self, users};
-
-use anyhow::{bail, Result};
-
-use super::password::Password;
-
 #[derive(Insertable, Queryable, Identifiable, Debug, Clone, PartialEq)]
+#[diesel(table_name = users)]
 pub struct User {
     id: Uuid,
     email: String,
@@ -21,11 +19,19 @@ pub struct User {
 }
 
 impl User {
+    pub fn ws_owner(conn: &mut PgConnection, ws: &Workspace) -> anyhow::Result<Option<User>> {
+        users
+            .filter(workspace_id.eq(&ws.id()).and(owner.eq(true)))
+            .first::<User>(conn)
+            .optional()
+            .context("context")
+    }
+
     pub fn id(&self) -> Uuid {
         self.id
     }
 
-    pub fn password(&self, conn: &mut PgConnection) -> Result<Password> {
+    pub fn password(&self, conn: &mut PgConnection) -> anyhow::Result<Password> {
         let r = Password::find(conn, &self.password_id)?;
         match r {
             Some(p) => Ok(p),
@@ -38,7 +44,7 @@ impl User {
         ws: &Workspace,
         _email: &String,
         password: &Password,
-    ) -> Result<User> {
+    ) -> anyhow::Result<User> {
         let user = User {
             id: Uuid::new_v4(),
             email: _email.clone(),
