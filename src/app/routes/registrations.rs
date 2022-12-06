@@ -1,14 +1,10 @@
-extern crate derive_more;
-
 use actix_web::{
     web::{self, Data, Json},
     HttpResponse, Scope,
 };
-use anyhow::{anyhow, Context, Result};
-use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
+use anyhow::Result;
 use diesel::Connection;
 use log::error;
-use rand::rngs::OsRng;
 use serde::Deserialize;
 use validator::Validate;
 
@@ -36,37 +32,24 @@ pub fn routes() -> Scope {
     Scope::new("/registrations").service(web::resource("").route(web::post().to(register)))
 }
 
-fn encrypt_password(password: &str) -> Result<(String, String)> {
-    let salt = SaltString::generate(&mut OsRng);
-    let argon = Argon2::default();
-    let hash = argon
-        .hash_password(password.as_bytes(), &salt)
-        .map_err(|e| anyhow!(e))?;
-
-    Ok((salt.to_string(), hash.to_string()))
-}
-
 async fn register(pool: Data<DbPool>, body: Json<RegistrationForm>) -> HttpResponse {
     let form = body.into_inner();
     let mut conn = pool.get().unwrap();
 
     let r: Result<()> = conn.transaction(|conn| {
         let ws = Workspace::create(conn, &form.workspace_code)?;
-        let _password = Password::create(conn, &form.user_password)?;
-        let user = User::create_owner(conn, &ws, &form.user_email)?;
+        let password = Password::create(conn, &form.user_password)?;
+        let user = User::create_owner(conn, &ws, &form.user_email, &password)?;
         anyhow::Ok(())
     });
 
     match r {
         Ok(_) => HttpResponse::Ok().finish(),
         Err(e) => {
+            error!("{}", e);
             if let Some(e) = e.downcast_ref::<Error>() {
                 return HttpResponse::Conflict().finish();
             }
-
-            let e: anyhow::Error = e;
-
-            error!("{}", e);
             HttpResponse::InternalServerError().json(e.to_string())
         }
     }
@@ -74,16 +57,6 @@ async fn register(pool: Data<DbPool>, body: Json<RegistrationForm>) -> HttpRespo
 
 #[cfg(test)]
 mod tests {
-    use passwords::hasher;
-
-    #[test]
-    fn test() {
-        let x = hasher::gen_salt();
-
-        let r = String::from_utf8_lossy(&x);
-
-        println!("{:?}", r);
-    }
 
     mod registration_form {
 

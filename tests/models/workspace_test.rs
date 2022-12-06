@@ -2,11 +2,7 @@ use anyhow::Result;
 use uuid::Uuid;
 use wmessage::models::{workspace::Workspace, Error};
 
-use crate::common::{seed::new_workspace, TestContext};
-
-fn build_context(db_name: &str) -> TestContext {
-    TestContext::new("postgresql://wmessage:wmessage@localhost:6543", db_name)
-}
+use crate::{common::seed::new_workspace, models::build_context};
 
 #[test]
 fn test_find_ws_when_do_not_exists() {
@@ -57,12 +53,6 @@ fn test_ws_creation_when_does_not_exists_ws_with_same_code() {
     let ctx = build_context("test_ws_creation_when_does_not_exists_ws_with_same_code");
     let mut conn = ctx.build_connection_and_migrate();
 
-    let code = "code";
-
-    let r: Result<Workspace, anyhow::Error> = Workspace::create(&mut conn, code);
-
-    match r {
-        Ok(ws) => assert_eq!(ws, Workspace::new(ws.id(), code)),
-        Err(_) => assert!(false),
-    }
+    let ws = Workspace::create(&mut conn, "code").unwrap();
+    assert_eq!(ws, Workspace::find(&mut conn, &ws.id()).unwrap().unwrap());
 }

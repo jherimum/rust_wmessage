@@ -14,3 +14,12 @@ pub fn new_workspaces(conn: &mut PgConnection, ws: Vec<(uuid::Uuid, &str)>) {
         new_workspace(conn, id, code)
     }
 }
+
+pub fn new_password(conn: &mut PgConnection, id: &uuid::Uuid, hash: &str) {
+    let sql = format!(
+        "INSERT INTO passwords (id, hash) VALUES ('{}', '{}')",
+        id, hash
+    );
+
+    diesel::sql_query(sql).execute(conn).unwrap();
+}

@@ -11,13 +11,6 @@ use crate::schema::passwords::dsl::*;
 use crate::schema::passwords;
 use anyhow::{anyhow, Context, Error, Result};
 
-#[derive(Insertable, Debug)]
-#[diesel(table_name = passwords)]
-pub struct Password {
-    id: Uuid,
-    hash: String,
-}
-
 struct Encrypter<'a>(Argon2<'a>);
 
 impl Encrypter<'_> {
@@ -53,7 +46,33 @@ impl Encrypter<'_> {
     }
 }
 
+#[derive(Insertable, Queryable, Identifiable, Debug, Clone, PartialEq)]
+#[diesel(table_name = passwords)]
+pub struct Password {
+    id: Uuid,
+    hash: String,
+}
+
 impl Password {
+    pub fn new(_id: Uuid, _hash: &str) -> Self {
+        Password {
+            id: _id,
+            hash: _hash.to_string(),
+        }
+    }
+
+    pub fn id(&self) -> Uuid {
+        self.id
+    }
+
+    pub fn find(conn: &mut PgConnection, _id: &Uuid) -> Result<Option<Password>> {
+        passwords
+            .filter(id.eq(_id))
+            .first::<Password>(conn)
+            .optional()
+            .context("failed to retrieve password")
+    }
+
     pub fn authenticate(&self, clear_password: &str) -> Result<bool> {
         Encrypter::new().verify(clear_password, &self.hash)
     }
@@ -61,10 +80,7 @@ impl Password {
     pub fn create(conn: &mut PgConnection, clear_password: &str) -> Result<Password> {
         let _hash = Encrypter::new().encrypt(clear_password)?;
 
-        let p = Password {
-            id: Uuid::new_v4(),
-            hash: _hash,
-        };
+        let p = Self::new(Uuid::new_v4(), &_hash);
 
         match insert_into(passwords).values(&p).execute(conn) {
             Ok(_) => Ok(p),
@@ -75,8 +91,25 @@ impl Password {
 
 #[cfg(test)]
 mod tests {
-    use super::Password;
+
+    use super::{Encrypter, Password};
 
     #[test]
-    fn t() {}
+    fn test_encrypter_verify() {
+        let e = Encrypter::new();
+        let hash = e.encrypt("password").unwrap();
+        assert!(e.verify("password", &hash).unwrap());
+        assert!(!e.verify("password1", &hash).unwrap());
+    }
+
+    #[test]
+    fn test_password_authetication() {
+        let p = Password::new(
+            uuid::Uuid::new_v4(),
+            &Encrypter::new().encrypt("password").unwrap(),
+        );
+
+        assert!(p.authenticate("password").unwrap());
+        assert!(!p.authenticate("password1").unwrap());
+    }
 }
