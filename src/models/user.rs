@@ -14,8 +14,8 @@ pub struct User {
     id: Uuid,
     email: String,
     workspace_id: Uuid,
-    password_id: Uuid,
     owner: bool,
+    password_id: Uuid,
 }
 
 impl User {
@@ -43,13 +43,13 @@ impl User {
         conn: &mut PgConnection,
         ws: &Workspace,
         _email: &String,
-        password: &Password,
+        clear_password: &str,
     ) -> anyhow::Result<User> {
         let user = User {
             id: Uuid::new_v4(),
             email: _email.clone(),
             workspace_id: ws.id(),
-            password_id: password.id(),
+            password_id: Password::create(conn, clear_password)?.id(),
             owner: true,
         };
 

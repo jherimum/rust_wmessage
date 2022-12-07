@@ -38,18 +38,23 @@ create table channels(
 
 create table message_types(
 	id uuid NOT NULL,
-	channel_id uuid NOT NULL,
 	code varchar NOT NULL,
-	name varchar not null,
+	description varchar NOT null,
+	vars jsonb NOT NULL,
+	enabled boolean NOT NULL,
+	channel_id uuid NOT NULL,
 	CONSTRAINT pk_message_types PRIMARY KEY (id),
 	CONSTRAINT ux_message_types_code UNIQUE (channel_id, code),
 	CONSTRAINT message_types_channel_fk FOREIGN KEY (channel_id) REFERENCES channels(id)
 );
 
 create table message_type_versions(
-	id uuid NOT NULL,
-	message_type_id uuid NOT NULL,
+	id uuid NOT NULL,	
 	"number" int NOT NULL,
+	schema jsonb NOT NULL,
+	vars jsonb NOT NULL,
+	enabled boolean NOT NULL,
+	message_type_id uuid NOT NULL,
 	CONSTRAINT pk_message_type_versions PRIMARY KEY (id),
 	CONSTRAINT ux_message_type_versions_version UNIQUE (message_type_id, "number"),
 	CONSTRAINT message_type_versions_msg_type_fk FOREIGN KEY (message_type_id) REFERENCES message_types(id)

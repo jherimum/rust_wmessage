@@ -24,17 +24,22 @@ diesel::table! {
 diesel::table! {
     message_type_versions (id) {
         id -> Uuid,
-        message_type_id -> Uuid,
         number -> Int4,
+        schema -> Jsonb,
+        vars -> Jsonb,
+        enabled -> Bool,
+        message_type_id -> Uuid,
     }
 }
 
 diesel::table! {
     message_types (id) {
         id -> Uuid,
-        channel_id -> Uuid,
         code -> Varchar,
-        name -> Varchar,
+        description -> Varchar,
+        vars -> Jsonb,
+        enabled -> Bool,
+        channel_id -> Uuid,
     }
 }
 
@@ -50,8 +55,8 @@ diesel::table! {
         id -> Uuid,
         email -> Varchar,
         workspace_id -> Uuid,
-        password_id -> Uuid,
         owner -> Bool,
+        password_id -> Uuid,
     }
 }
 

@@ -1,16 +1,15 @@
 use actix_web::{
     web::{self, Data, Json},
-    HttpResponse, Scope,
+    HttpResponse, Responder, Scope,
 };
 use anyhow::Result;
 use diesel::Connection;
-use log::error;
 use serde::Deserialize;
 use validator::Validate;
 
 use crate::{
     config::DbPool,
-    models::{password::Password, user::User, workspace::Workspace, Error},
+    models::{user::User, workspace::Workspace, Error},
 };
 
 use crate::commons::validators::validate_password;
@@ -32,22 +31,20 @@ pub fn routes() -> Scope {
     Scope::new("/registrations").service(web::resource("").route(web::post().to(register)))
 }
 
-async fn register(pool: Data<DbPool>, body: Json<RegistrationForm>) -> HttpResponse {
+async fn register(pool: Data<DbPool>, body: Json<RegistrationForm>) -> impl Responder {
     let form = body.into_inner();
     let mut conn = pool.get().unwrap();
 
     let r: Result<()> = conn.transaction(|conn| {
         let ws = Workspace::create(conn, &form.workspace_code)?;
-        let password = Password::create(conn, &form.user_password)?;
-        let user = User::create_owner(conn, &ws, &form.user_email, &password)?;
+        let _user = User::create_owner(conn, &ws, &form.user_email, &form.user_password)?;
         anyhow::Ok(())
     });
 
     match r {
         Ok(_) => HttpResponse::Ok().finish(),
         Err(e) => {
-            error!("{}", e);
-            if let Some(e) = e.downcast_ref::<Error>() {
+            if let Some(_) = e.downcast_ref::<Error>() {
                 return HttpResponse::Conflict().finish();
             }
             HttpResponse::InternalServerError().json(e.to_string())

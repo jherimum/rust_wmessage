@@ -59,7 +59,7 @@ impl Workspace {
     pub fn create(conn: &mut PgConnection, _code: &str) -> Result<Workspace> {
         if Workspace::exists_code(conn, _code)? {
             bail!(Error::WS001 {
-                code: _code.to_owned(),
+                code: _code.to_string(),
             });
         }
 
