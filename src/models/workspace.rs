@@ -21,9 +21,9 @@ pub struct Workspace {
 }
 
 impl Workspace {
-    pub fn new(ws_id: Uuid, ws_code: &str) -> Self {
+    pub fn new(ws_code: &str) -> Self {
         Workspace {
-            id: ws_id,
+            id: Uuid::new_v4(),
             code: ws_code.to_string(),
         }
     }
@@ -56,22 +56,20 @@ impl Workspace {
             .context("Database error")
     }
 
-    pub fn create(conn: &mut PgConnection, _code: &str) -> Result<Workspace> {
-        if Workspace::exists_code(conn, _code)? {
+    pub fn save(self, conn: &mut PgConnection) -> Result<Workspace> {
+        if Workspace::exists_code(conn, &self.code)? {
             bail!(Error::WS001 {
-                code: _code.to_string(),
+                code: self.code.clone()
             });
         }
 
-        let ws = Self::new(Uuid::new_v4(), _code);
-
         let rows_inserted: usize = insert_into(schema::workspaces::dsl::workspaces)
-            .values(&ws)
+            .values(&self)
             .execute(conn)
             .context("Database error")?;
 
         match rows_inserted {
-            1 => Ok(ws),
+            1 => Ok(self),
             _ => bail!("The workspace could not be inserted"),
         }
     }

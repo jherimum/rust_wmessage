@@ -9,20 +9,20 @@ use uuid::Uuid;
 use crate::schema::passwords::dsl::*;
 
 use crate::schema::passwords;
-use anyhow::{anyhow, Context, Error, Result};
+use anyhow::{anyhow, bail, Context};
 
-struct Encrypter<'a>(Argon2<'a>);
+pub struct Encrypter<'a>(Argon2<'a>);
 
 impl Encrypter<'_> {
     fn argon(&self) -> Argon2 {
         self.0.clone()
     }
 
-    fn new() -> Self {
+    pub fn new() -> Self {
         Encrypter(Argon2::default())
     }
 
-    fn encrypt(&self, clear_password: &str) -> Result<String> {
+    pub fn encrypt(&self, clear_password: &str) -> anyhow::Result<String> {
         let _salt = SaltString::generate(&mut OsRng);
         self.argon()
             .hash_password(clear_password.as_bytes(), &_salt)
@@ -31,7 +31,7 @@ impl Encrypter<'_> {
             .context("error while hashing password")
     }
 
-    fn verify(&self, clear_password: &str, _hash: &str) -> Result<bool> {
+    pub fn verify(&self, clear_password: &str, _hash: &str) -> anyhow::Result<bool> {
         let password_hash = PasswordHash::new(_hash)
             .map_err(|e| anyhow!(e))
             .context("error while creating PasswordHash")?;
@@ -54,10 +54,20 @@ pub struct Password {
 }
 
 impl Password {
-    pub fn new(_id: Uuid, _hash: &str) -> Self {
-        Password {
-            id: _id,
-            hash: _hash.to_string(),
+    pub fn new(clear_password: &str) -> anyhow::Result<Password> {
+        Encrypter::new()
+            .encrypt(&clear_password)
+            .map(|_hash| Password {
+                id: Uuid::new_v4(),
+                hash: _hash,
+            })
+            .context("failed to encrypt password")
+    }
+
+    pub fn save(self, conn: &mut PgConnection) -> anyhow::Result<Password> {
+        match insert_into(passwords).values(&self).execute(conn) {
+            Ok(_) => Ok(self),
+            Err(e) => bail!(e),
         }
     }
 
@@ -65,7 +75,7 @@ impl Password {
         self.id
     }
 
-    pub fn find(conn: &mut PgConnection, _id: &Uuid) -> Result<Option<Password>> {
+    pub fn find(conn: &mut PgConnection, _id: &Uuid) -> anyhow::Result<Option<Password>> {
         passwords
             .filter(id.eq(_id))
             .first::<Password>(conn)
@@ -73,19 +83,8 @@ impl Password {
             .context("failed to retrieve password")
     }
 
-    pub fn authenticate(&self, clear_password: &str) -> Result<bool> {
+    pub fn authenticate(&self, clear_password: &str) -> anyhow::Result<bool> {
         Encrypter::new().verify(clear_password, &self.hash)
-    }
-
-    pub fn create(conn: &mut PgConnection, clear_password: &str) -> Result<Password> {
-        let _hash = Encrypter::new().encrypt(clear_password)?;
-
-        let p = Self::new(Uuid::new_v4(), &_hash);
-
-        match insert_into(passwords).values(&p).execute(conn) {
-            Ok(_) => Ok(p),
-            Err(e) => Err(Error::new(e)),
-        }
     }
 }
 
@@ -104,10 +103,7 @@ mod tests {
 
     #[test]
     fn test_password_authetication() {
-        let p = Password::new(
-            uuid::Uuid::new_v4(),
-            &Encrypter::new().encrypt("password").unwrap(),
-        );
+        let p = Password::new("password").unwrap();
 
         assert!(p.authenticate("password").unwrap());
         assert!(!p.authenticate("password1").unwrap());

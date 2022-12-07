@@ -1,9 +1,11 @@
 use crate::{models::Error, schema::message_type_versions};
 use anyhow::{bail, Context};
-use diesel::prelude::*;
+use diesel::{insert_into, prelude::*};
 use uuid::Uuid;
 
 use valico::{common::error::ValicoError, json_schema::Scope};
+
+use super::message_type::MessageType;
 
 #[derive(Identifiable, Insertable, Debug, Clone, PartialEq, Queryable)]
 #[diesel(table_name = message_type_versions)]

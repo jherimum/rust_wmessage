@@ -24,7 +24,7 @@ impl User {
             .filter(workspace_id.eq(&ws.id()).and(owner.eq(true)))
             .first::<User>(conn)
             .optional()
-            .context("context")
+            .context("failed to retrieve owner")
     }
 
     pub fn id(&self) -> Uuid {
@@ -39,23 +39,26 @@ impl User {
         }
     }
 
-    pub fn create_owner(
+    pub fn save(self, conn: &mut PgConnection) -> anyhow::Result<User> {
+        match insert_into(users).values(&self).execute(conn) {
+            Ok(_) => Ok(self),
+            Err(e) => bail!(e),
+        }
+    }
+
+    pub fn new(
         conn: &mut PgConnection,
         ws: &Workspace,
         _email: &String,
-        clear_password: &str,
-    ) -> anyhow::Result<User> {
-        let user = User {
+        password: &Password,
+        _owner: bool,
+    ) -> User {
+        User {
             id: Uuid::new_v4(),
             email: _email.clone(),
             workspace_id: ws.id(),
-            password_id: Password::create(conn, clear_password)?.id(),
-            owner: true,
-        };
-
-        match insert_into(users).values(&user).execute(conn) {
-            Ok(_) => Ok(user),
-            Err(e) => bail!(e),
+            password_id: password.id(),
+            owner: _owner,
         }
     }
 }

@@ -9,7 +9,7 @@ use validator::Validate;
 
 use crate::{
     config::DbPool,
-    models::{user::User, workspace::Workspace, Error},
+    models::{password::Password, user::User, workspace::Workspace, Error},
 };
 
 use crate::commons::validators::validate_password;
@@ -35,13 +35,12 @@ async fn register(pool: Data<DbPool>, body: Json<RegistrationForm>) -> impl Resp
     let form = body.into_inner();
     let mut conn = pool.get().unwrap();
 
-    let r: Result<()> = conn.transaction(|conn| {
-        let ws = Workspace::create(conn, &form.workspace_code)?;
-        let _user = User::create_owner(conn, &ws, &form.user_email, &form.user_password)?;
+    match conn.transaction(|conn| {
+        let ws = Workspace::new(&form.workspace_code).save(conn)?;
+        let password = Password::new(&form.user_password)?.save(conn)?;
+        let _user = User::new(conn, &ws, &form.user_email, &password, true).save(conn)?;
         anyhow::Ok(())
-    });
-
-    match r {
+    }) {
         Ok(_) => HttpResponse::Ok().finish(),
         Err(e) => {
             if let Some(_) = e.downcast_ref::<Error>() {

@@ -7,7 +7,7 @@ use schema::message_types::dsl::*;
 
 #[derive(Insertable, Identifiable, Debug, Clone, PartialEq, Queryable)]
 #[diesel(table_name = message_types)]
-struct MessageType {
+pub struct MessageType {
     id: Uuid,
     code: String,
     description: String,
