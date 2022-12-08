@@ -53,20 +53,29 @@ impl Password {
 
 #[cfg(test)]
 mod test {
-    use crate::commons::encrypt::MockEncrypter;
+    use crate::commons::encrypt::{self, MockEncrypter};
 
     use super::Password;
 
-    #[test]
-    fn test_new_password_hash() {
+    fn mock_encrypt() -> MockEncrypter {
         let mut mock = MockEncrypter::new();
         mock.expect_encrypt().returning(|pass| Ok(pass.to_string()));
+        mock.expect_verify()
+            .returning(|pass, hash| Ok(pass.eq(hash)));
+        mock
+    }
 
-        let pass = Password::new("password", &mock).unwrap();
-
+    #[test]
+    fn test_new_password_hash() {
+        let pass = Password::new("password", &mock_encrypt()).unwrap();
         assert_eq!(pass.hash, "password");
     }
 
     #[test]
-    fn test_new_with_encryption_error() {}
+    fn test_authenticate() {
+        let encrypt = mock_encrypt();
+        let pass = Password::new("password", &encrypt).unwrap();
+        assert!(pass.authenticate("password", &encrypt).unwrap());
+        assert!(!pass.authenticate("password1", &encrypt).unwrap());
+    }
 }
