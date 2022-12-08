@@ -22,6 +22,12 @@ diesel::table! {
 }
 
 diesel::table! {
+    health (id) {
+        id -> Int4,
+    }
+}
+
+diesel::table! {
     message_type_versions (id) {
         id -> Uuid,
         number -> Int4,
@@ -75,6 +81,7 @@ diesel::joinable!(users -> passwords (password_id));
 diesel::allow_tables_to_appear_in_same_query!(
     api_keys,
     channels,
+    health,
     message_type_versions,
     message_types,
     passwords,

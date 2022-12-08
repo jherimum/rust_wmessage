@@ -36,7 +36,7 @@ async fn register(
     body: Json<RegistrationForm>,
 ) -> Result<HttpResponse, AppError> {
     let form = body.into_inner();
-    let mut conn = pool.get().unwrap();
+    let mut conn = pool.get().map_err(|err| AppError::from(err))?;
     let encrypter = Argon::new();
 
     conn.transaction(|conn| {

@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use diesel::{r2d2::ConnectionManager, PgConnection};
 use dotenv::dotenv;
 use log::info;
@@ -32,6 +34,7 @@ impl AppConfig {
         info!("Creating database pool");
         let manager = ConnectionManager::<PgConnection>::new(self.database_url.to_string());
         Pool::builder()
+            .connection_timeout(Duration::from_secs(10))
             .build(manager)
             .map_err(|err| AppError::from(err))
     }

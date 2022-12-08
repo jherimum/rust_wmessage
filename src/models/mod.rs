@@ -1,5 +1,6 @@
 pub mod apikey;
 pub mod channel;
+pub mod health;
 pub mod message_type;
 pub mod message_type_version;
 pub mod password;

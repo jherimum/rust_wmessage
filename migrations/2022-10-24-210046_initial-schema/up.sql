@@ -1,3 +1,8 @@
+CREATE TABLE health (
+	id int NOT NULL,
+	CONSTRAINT pk_status PRIMARY KEY (id)
+);
+
 CREATE TABLE workspaces (
 	id uuid NOT NULL,
 	code varchar NOT NULL,

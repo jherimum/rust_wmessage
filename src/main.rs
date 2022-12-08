@@ -2,6 +2,7 @@ use actix_web::middleware::Logger;
 use actix_web::web::{self, scope, Data};
 use actix_web::{App, HttpResponse, HttpServer};
 
+use wmessage::app::routes::health::{self};
 use wmessage::app::routes::registrations::{self};
 use wmessage::app::routes::{connections, plugins};
 use wmessage::commons::error::AppError;
@@ -29,6 +30,7 @@ async fn main() -> Result<(), AppError> {
             )])))
             .service(
                 scope("/api")
+                    .service(health::routes())
                     .service(plugins::routes())
                     .service(registrations::routes())
                     .service(web::resource("").route(web::get().to(index)))
