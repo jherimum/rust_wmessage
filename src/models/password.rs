@@ -53,7 +53,7 @@ impl Password {
 
 #[cfg(test)]
 mod test {
-    use crate::commons::encrypt::{self, MockEncrypter};
+    use crate::commons::encrypt::MockEncrypter;
 
     use super::Password;
 
@@ -66,7 +66,7 @@ mod test {
     }
 
     #[test]
-    fn test_new_password_hash() {
+    fn test_new_password() {
         let pass = Password::new("password", &mock_encrypt()).unwrap();
         assert_eq!(pass.hash, "password");
     }

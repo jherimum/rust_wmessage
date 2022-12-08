@@ -28,7 +28,6 @@ pub mod argon {
 
         fn verify(&self, clear_password: &str, _hash: &str) -> Result<bool, AppError> {
             let password_hash = PasswordHash::new(_hash).map_err(|e| AppError::from(e))?;
-
             match argon2::PasswordVerifier::verify_password(
                 &self.argon(),
                 &clear_password.as_bytes(),
