@@ -50,3 +50,23 @@ impl Password {
         encrypter.verify(plain_password, &self.hash)
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::commons::encrypt::MockEncrypter;
+
+    use super::Password;
+
+    #[test]
+    fn test_new_password_hash() {
+        let mut mock = MockEncrypter::new();
+        mock.expect_encrypt().returning(|pass| Ok(pass.to_string()));
+
+        let pass = Password::new("password", &mock).unwrap();
+
+        assert_eq!(pass.hash, "password");
+    }
+
+    #[test]
+    fn test_new_with_encryption_error() {}
+}

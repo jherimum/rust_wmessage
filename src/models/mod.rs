@@ -8,7 +8,7 @@ pub mod workspace;
 
 use std::fmt::Display;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ModelErrorKind {
     EntityNotFound { message: String },
     WorkspaceCodeAlreadyExists { code: String },

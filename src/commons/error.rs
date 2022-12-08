@@ -7,7 +7,7 @@ use valico::json_schema::SchemaError;
 
 use crate::models::ModelErrorKind;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum AppErrorKind {
     IOError,
     PoolError,
@@ -20,7 +20,7 @@ pub enum AppErrorKind {
     PluginError,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct AppError {
     kind: AppErrorKind,
     message: String,
