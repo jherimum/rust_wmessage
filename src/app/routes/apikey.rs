@@ -16,7 +16,7 @@ use rand::distributions::DistString;
 use uuid::Uuid;
 
 #[derive(Deserialize, Debug, Clone)]
-struct ApiKeyForm {
+pub struct ApiKeyForm {
     name: String,
     ttl: i64,
 }

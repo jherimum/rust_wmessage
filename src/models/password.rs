@@ -15,23 +15,17 @@ pub struct Password {
 }
 
 impl Password {
-    pub fn new(clear_password: &str) -> Result<Password, AppError> {
-        Encrypter::new()
-            .encrypt(&clear_password)
-            .map(|_hash| Password {
-                id: Uuid::new_v4(),
-                hash: _hash,
-            })
+    pub fn new(plain_password: &str, encrypter: &dyn Encrypter) -> Result<Password, AppError> {
+        encrypter.encrypt(&plain_password).map(|_hash| Password {
+            id: Uuid::new_v4(),
+            hash: _hash,
+        })
     }
 
     pub fn save(self, conn: &mut PgConnection) -> Result<Password, AppError> {
         match insert_into(passwords).values(&self).execute(conn) {
             Ok(1) => Ok(self),
-            Ok(_) => Err(AppError::model_error(
-                super::ModelErrorKind::EntityNotFound {
-                    message: "password not inserted".to_string(),
-                },
-            )),
+            Ok(_) => Err(AppError::database_error("password not inserted")),
             Err(err) => Err(AppError::from(err)),
         }
     }
@@ -48,7 +42,11 @@ impl Password {
             .map_err(|err| AppError::from(err))
     }
 
-    pub fn authenticate(&self, clear_password: &str) -> Result<bool, AppError> {
-        Encrypter::new().verify(clear_password, &self.hash)
+    pub fn authenticate(
+        &self,
+        plain_password: &str,
+        encrypter: &dyn Encrypter,
+    ) -> Result<bool, AppError> {
+        encrypter.verify(plain_password, &self.hash)
     }
 }
