@@ -42,7 +42,7 @@ pub async fn register(
     let form = body.into_inner();
 
     let ws = match Workspace::find(&mut conn, &ws_id) {
-        Err(e) => return HttpResponse::InternalServerError(),
+        Err(_) => return HttpResponse::InternalServerError(),
         Ok(None) => {
             return HttpResponse::NotFound();
         }

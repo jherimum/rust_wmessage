@@ -1,4 +1,4 @@
-use std::{borrow::Cow, cmp::Ordering, collections::HashMap};
+use std::borrow::Cow;
 
 use lazy_static::lazy_static;
 use passwords::{analyzer, scorer};

@@ -2,7 +2,7 @@ use std::ops::Deref;
 
 use actix_web::{
     web::{self, get, resource, Data},
-    HttpResponse, Responder, Scope,
+    HttpResponse, Scope,
 };
 use serde::Serialize;
 

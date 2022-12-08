@@ -1,17 +1,11 @@
-use diesel::prelude::*;
-use diesel::{insert_into, PgConnection};
-use uuid::Uuid;
-
-use crate::models::Error;
-use crate::schema::{self, workspaces};
-
-use anyhow::Result;
-use anyhow::{bail, Context};
-
-use diesel::OptionalExtension;
-use schema::workspaces::dsl::*;
-
 use super::user::User;
+use crate::commons::error::AppError;
+use crate::schema::{self, workspaces};
+use diesel::prelude::*;
+use diesel::OptionalExtension;
+use diesel::{insert_into, PgConnection};
+use schema::workspaces::dsl::*;
+use uuid::Uuid;
 
 #[derive(Insertable, Identifiable, Debug, Clone, PartialEq, Queryable)]
 #[diesel(table_name = workspaces)]
@@ -28,49 +22,54 @@ impl Workspace {
         }
     }
 
-    pub fn owner(&self, conn: &mut PgConnection) -> Result<User> {
+    pub fn owner(&self, conn: &mut PgConnection) -> Result<User, AppError> {
         match User::ws_owner(conn, &self)? {
             Some(u) => Ok(u),
-            None => bail!("owner not found"),
+            None => Err(AppError::model_error(
+                super::ModelErrorKind::EntityNotFound {
+                    message: "owner not found".to_string(),
+                },
+            )),
         }
     }
 
-    pub fn find(conn: &mut PgConnection, ws_id: &Uuid) -> anyhow::Result<Option<Workspace>> {
+    pub fn find(conn: &mut PgConnection, ws_id: &Uuid) -> Result<Option<Workspace>, AppError> {
         workspaces
             .filter(id.eq(ws_id))
             .first::<Workspace>(conn)
             .optional()
-            .context("Database error")
+            .map_err(|err| AppError::from(err))
     }
 
     pub fn id(&self) -> Uuid {
         self.id
     }
 
-    pub fn exists_code(conn: &mut PgConnection, _code: &str) -> Result<bool> {
+    pub fn exists_code(conn: &mut PgConnection, _code: &str) -> Result<bool, AppError> {
         workspaces::table
             .filter(code.eq(_code))
             .count()
             .get_result::<i64>(conn)
             .map(|count| count > 0)
-            .context("Database error")
+            .map_err(|err| AppError::from(err))
     }
 
-    pub fn save(self, conn: &mut PgConnection) -> Result<Workspace> {
+    pub fn save(self, conn: &mut PgConnection) -> Result<Workspace, AppError> {
         if Workspace::exists_code(conn, &self.code)? {
-            bail!(Error::WS001 {
-                code: self.code.clone()
-            });
+            return Err(AppError::model_error(
+                crate::models::ModelErrorKind::WorkspaceCodeAlreadyExists {
+                    code: self.code.clone(),
+                },
+            ));
         }
 
-        let rows_inserted: usize = insert_into(schema::workspaces::dsl::workspaces)
+        match insert_into(schema::workspaces::dsl::workspaces)
             .values(&self)
             .execute(conn)
-            .context("Database error")?;
-
-        match rows_inserted {
+            .map_err(|err| AppError::from(err))?
+        {
             1 => Ok(self),
-            _ => bail!("The workspace could not be inserted"),
+            _ => Err(AppError::database_error("Workspace not inserted")),
         }
     }
 }

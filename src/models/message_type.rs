@@ -1,9 +1,6 @@
-use crate::schema::{self, message_types};
+use crate::schema::message_types;
 use diesel::prelude::*;
 use uuid::Uuid;
-
-use diesel::OptionalExtension;
-use schema::message_types::dsl::*;
 
 #[derive(Insertable, Identifiable, Debug, Clone, PartialEq, Queryable)]
 #[diesel(table_name = message_types)]

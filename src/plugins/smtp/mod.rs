@@ -4,6 +4,8 @@ use serde::Deserialize;
 use std::collections::HashMap;
 use std::fmt::Debug;
 
+use crate::commons::error::AppError;
+
 use super::{ConnectorPlugin, DispatchType, DispatcherPlugin, Property};
 
 const MAIL_SMTP_HOST: &str = "mail.smtp.host";
@@ -98,7 +100,7 @@ impl DispatcherPlugin for EmailDispatcher {
         self.properties.clone()
     }
 
-    fn dispatch(&self, req: super::Request) -> anyhow::Result<super::Response> {
+    fn dispatch(&self, req: super::Request) -> Result<super::Response, AppError> {
         let conn_props: ConnectorProperties = req.connector_props()?;
         let disp_props: DispatcherProprepties = req.dispatcher_props()?;
 
@@ -122,7 +124,7 @@ impl DispatcherPlugin for EmailDispatcher {
 
         match x {
             Ok(r) => Ok(super::Response),
-            Err(e) => Err(anyhow::Error::new(e)),
+            Err(e) => Err(AppError::from(e)),
         }
     }
 }

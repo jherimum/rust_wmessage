@@ -1,8 +1,9 @@
 pub mod smtp;
 use std::{collections::HashMap, ops::Deref};
 
-use anyhow::{Context, Result};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
+
+use crate::commons::error::AppError;
 
 pub struct ConnectorPlugins {
     plugins: HashMap<String, Box<dyn ConnectorPlugin>>,
@@ -55,7 +56,7 @@ impl Property {
 
 pub trait DispatcherPlugin {
     fn r#type(&self) -> DispatchType;
-    fn dispatch(&self, req: Request) -> Result<Response>;
+    fn dispatch(&self, req: Request) -> Result<Response, AppError>;
     fn properties(&self) -> Vec<Property>;
 }
 
@@ -67,20 +68,19 @@ pub struct Request {
 }
 
 impl Request {
-    fn connector_props<D>(&self) -> Result<D>
+    fn connector_props<D>(&self) -> Result<D, AppError>
     where
         D: for<'a> Deserialize<'a> + DeserializeOwned,
     {
-        serde_json::from_value::<D>(self.connector_props.clone())
-            .context("error while deserealization")
+        serde_json::from_value::<D>(self.connector_props.clone()).map_err(|err| AppError::from(err))
     }
 
-    fn dispatcher_props<D>(&self) -> Result<D>
+    fn dispatcher_props<D>(&self) -> Result<D, AppError>
     where
         D: for<'a> Deserialize<'a> + DeserializeOwned,
     {
         serde_json::from_value::<D>(self.dispatcher_props.clone())
-            .context("error while deserealization")
+            .map_err(|err| AppError::from(err))
     }
 }
 

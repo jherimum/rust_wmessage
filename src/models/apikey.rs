@@ -3,10 +3,9 @@ use uuid::Uuid;
 
 use diesel::prelude::*;
 
-use crate::schema::api_keys;
+use crate::{commons::error::AppError, schema::api_keys};
 
 use super::workspace::Workspace;
-use anyhow::bail;
 
 #[derive(Insertable, Queryable, Identifiable, Debug, Clone)]
 #[diesel(table_name = api_keys)]
@@ -37,10 +36,14 @@ impl ApiKey {
         }
     }
 
-    pub fn workspace(&self, conn: &mut PgConnection) -> anyhow::Result<Workspace> {
+    pub fn workspace(&self, conn: &mut PgConnection) -> Result<Workspace, AppError> {
         match Workspace::find(conn, &self.workspace_id)? {
             Some(ws) => Ok(ws),
-            None => bail!("workspace not found"),
+            None => Err(AppError::model_error(
+                super::ModelErrorKind::EntityNotFound {
+                    message: "Worspace not found".to_string(),
+                },
+            )),
         }
     }
 }

@@ -2,25 +2,20 @@ use actix_web::middleware::Logger;
 use actix_web::web::{self, scope, Data};
 use actix_web::{App, HttpResponse, HttpServer};
 
-use anyhow::{Context, Result};
 use wmessage::app::routes::registrations::{self};
 use wmessage::app::routes::{connections, plugins};
+use wmessage::commons::error::AppError;
 use wmessage::config::AppConfig;
 use wmessage::plugins::{smtp, ConnectorPlugins};
 
 extern crate lazy_static;
 
 #[actix_web::main]
-async fn main() -> Result<()> {
+async fn main() -> Result<(), AppError> {
     env_logger::init_from_env(env_logger::Env::default().default_filter_or("debug"));
 
-    let config =
-        AppConfig::from_env().context("error while creating app config from environmeet")?;
-
-    let pool = config
-        .create_pool()
-        .await
-        .context("error while creating pool ")?;
+    let config = AppConfig::from_env()?;
+    let pool = config.create_pool().await?;
 
     let smtp_plugin = smtp::StmpPlugin::new();
 
@@ -40,7 +35,8 @@ async fn main() -> Result<()> {
                     .service(scope("/workspaces/{ws_id}").service(connections::routes())),
             )
     })
-    .bind((config.host, config.port))?
+    .bind((config.host, config.port))
+    .map_err(|err| AppError::from(err))?
     .run()
     .await?;
 

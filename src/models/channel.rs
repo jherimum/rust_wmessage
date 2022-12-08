@@ -3,8 +3,9 @@ use serde_json::json;
 use serde_json::Value as Json;
 use uuid::Uuid;
 
+use crate::commons::error::AppError;
+
 use super::workspace::Workspace;
-use anyhow::Result;
 
 #[derive(Debug, Clone)]
 pub struct Channel {
@@ -15,7 +16,7 @@ pub struct Channel {
 }
 
 impl Channel {
-    pub fn new(conn: &PgConnection, ws: &Workspace, _code: &String) -> Result<Channel> {
+    pub fn new(conn: &PgConnection, ws: &Workspace, _code: &String) -> Result<Channel, AppError> {
         let _propert = json!("{}");
 
         let channel = Channel {

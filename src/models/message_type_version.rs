@@ -1,11 +1,14 @@
-use crate::{models::Error, schema::message_type_versions};
-use anyhow::{bail, Context};
+use crate::{
+    commons::{error::AppError, json_schema::JsonSchema, new_uuid},
+    schema::message_type_versions,
+};
 use diesel::{insert_into, prelude::*};
+
 use uuid::Uuid;
 
-use valico::{common::error::ValicoError, json_schema::Scope};
-
 use super::message_type::MessageType;
+
+use crate::schema::message_type_versions::dsl::*;
 
 #[derive(Identifiable, Insertable, Debug, Clone, PartialEq, Queryable)]
 #[diesel(table_name = message_type_versions)]
@@ -18,92 +21,43 @@ struct MessageTypeVersion {
     message_type_id: Uuid,
 }
 
-struct SchemaValidator {
-    schema: serde_json::Value,
-}
-
-impl SchemaValidator {
-    fn new(schema_p: &serde_json::Value) -> Self {
-        SchemaValidator {
-            schema: schema_p.clone(),
-        }
-    }
-
-    fn validate(&self, payload: &serde_json::Value) -> anyhow::Result<Vec<String>> {
-        let mut scope = Scope::new().supply_defaults();
-
-        let json_schema = scope
-            .compile_and_return(self.schema.clone(), true)
-            .context("error while creating json schema")?;
-
-        let validation = json_schema.validate(payload);
-
-        let mut errors: Vec<String> = vec![];
-
-        if !validation.is_valid() {
-            for x in validation.errors {
-                if let Some(d) = x.get_detail() {
-                    errors.push(d.to_string())
-                }
-            }
-        }
-
-        Ok(errors)
-    }
-}
-
 impl MessageTypeVersion {
-    pub fn validate(&self, payload: &serde_json::Value) -> anyhow::Result<Vec<String>> {
-        SchemaValidator::new(&self.schema).validate(payload)
+    pub fn new(
+        message_type: &MessageType,
+        number_p: i32,
+        schema_p: serde_json::Value,
+        vars_p: serde_json::Value,
+        enabled_p: bool,
+    ) -> Result<Self, AppError> {
+        match JsonSchema::new(&schema_p) {
+            Ok(_) => Ok(MessageTypeVersion {
+                id: new_uuid(),
+                number: number_p,
+                schema: schema_p,
+                vars: vars_p,
+                enabled: enabled_p,
+                message_type_id: message_type.id().clone(),
+            }),
+            Err(e) => Err(e),
+        }
     }
-}
 
-#[cfg(test)]
-mod tests {
-    use valico::json_schema::Scope;
-
-    use super::SchemaValidator;
-
-    #[test]
-    fn test_schema() {
-        let schema = r#"
+    pub fn save(&self, conn: &mut PgConnection) -> Result<MessageTypeVersion, AppError> {
+        match insert_into(message_type_versions)
+            .values(self)
+            .execute(conn)
         {
-            "$id": "https://example.com/person.schema.json",
-            "$schema": "https://json-schema.org/draft/2020-12/schema",
-            "title": "Person",
-            "type": "object",
-            "properties": {
-              "firstName": {
-                "type": "string",
-                "description": "The person's first name."
-              },
-              "lastName": {
-                "type": "string",
-                "description": "The person's last name."
-              },
-              "age": {
-                "description": "Age in years which must be equal to or greater than zero.",
-                "type": "integer",
-                "minimum": 0
-              }
-            }
-          }"#;
+            Ok(1) => Ok(self.clone()),
+            Ok(_) => Err(AppError::model_error(
+                super::ModelErrorKind::EntityNotFound {
+                    message: "message type version not inserted".to_string(),
+                },
+            )),
+            Err(err) => Err(AppError::from(err)),
+        }
+    }
 
-        let data = r#"
-        {   
-            "lastName": 1,
-            "name": "John Doe",
-            "age": 43,
-            "phones": [
-                "+44 1234567",
-                "+44 2345678"
-            ]
-        }"#;
-
-        let x = SchemaValidator::new(&serde_json::from_str(schema).unwrap())
-            .validate(&serde_json::from_str(data).unwrap())
-            .unwrap();
-
-        println!("{:?}", x)
+    pub fn validate(&self, payload: &serde_json::Value) -> Result<Vec<String>, AppError> {
+        JsonSchema::new(&self.schema)?.validate(payload)
     }
 }

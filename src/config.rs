@@ -4,7 +4,7 @@ use log::info;
 use r2d2::Pool;
 use serde::Deserialize;
 
-use anyhow::{Context, Result};
+use crate::commons::error::AppError;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct AppConfig {
@@ -16,23 +16,23 @@ pub struct AppConfig {
 pub type DbPool = Pool<ConnectionManager<PgConnection>>;
 
 impl AppConfig {
-    pub fn from_env() -> Result<AppConfig> {
+    pub fn from_env() -> Result<AppConfig, AppError> {
         dotenv().ok();
 
         info!("Loading configuration");
         config::Config::builder()
             .add_source(config::Environment::default())
             .build()
-            .context("error while building config")?
+            .map_err(|err| AppError::from(err))?
             .try_deserialize::<AppConfig>()
-            .context("error while deserializeing AppConfg")
+            .map_err(|err| AppError::from(err))
     }
 
-    pub async fn create_pool(&self) -> Result<DbPool> {
+    pub async fn create_pool(&self) -> Result<DbPool, AppError> {
         info!("Creating database pool");
         let manager = ConnectionManager::<PgConnection>::new(self.database_url.to_string());
         Pool::builder()
             .build(manager)
-            .context("error while building connection pool")
+            .map_err(|err| AppError::from(err))
     }
 }

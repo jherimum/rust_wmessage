@@ -1,8 +1,7 @@
 use super::password::Password;
 use super::workspace::Workspace;
+use crate::commons::error::AppError;
 use crate::schema::{self, users};
-use anyhow::bail;
-use anyhow::Context;
 use diesel::prelude::*;
 use diesel::{insert_into, PgConnection};
 use schema::users::dsl::*;
@@ -19,30 +18,34 @@ pub struct User {
 }
 
 impl User {
-    pub fn ws_owner(conn: &mut PgConnection, ws: &Workspace) -> anyhow::Result<Option<User>> {
+    pub fn ws_owner(conn: &mut PgConnection, ws: &Workspace) -> Result<Option<User>, AppError> {
         users
             .filter(workspace_id.eq(&ws.id()).and(owner.eq(true)))
             .first::<User>(conn)
             .optional()
-            .context("failed to retrieve owner")
+            .map_err(|err| AppError::from(err))
     }
 
     pub fn id(&self) -> Uuid {
         self.id
     }
 
-    pub fn password(&self, conn: &mut PgConnection) -> anyhow::Result<Password> {
+    pub fn password(&self, conn: &mut PgConnection) -> Result<Password, AppError> {
         let r = Password::find(conn, &self.password_id)?;
         match r {
             Some(p) => Ok(p),
-            None => bail!("password do not exists"),
+            None => Err(AppError::model_error(
+                super::ModelErrorKind::EntityNotFound {
+                    message: "Password not found".to_string(),
+                },
+            )),
         }
     }
 
-    pub fn save(self, conn: &mut PgConnection) -> anyhow::Result<User> {
+    pub fn save(self, conn: &mut PgConnection) -> Result<User, AppError> {
         match insert_into(users).values(&self).execute(conn) {
             Ok(_) => Ok(self),
-            Err(e) => bail!(e),
+            Err(e) => Err(AppError::database_error("password not inserted")),
         }
     }
 

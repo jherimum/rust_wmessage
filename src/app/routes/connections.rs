@@ -1,8 +1,7 @@
 use std::collections::HashMap;
 
 use actix_web::{
-    post,
-    web::{self, get, post, resource, Data, Json, Path},
+    web::{self, get, post, Data, Json, Path},
     HttpResponse, Responder, Scope,
 };
 use serde::{Deserialize, Serialize};

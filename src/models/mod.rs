@@ -6,10 +6,16 @@ pub mod password;
 pub mod user;
 pub mod workspace;
 
-use thiserror::Error;
+use std::fmt::Display;
 
-#[derive(Error, Debug, PartialEq)]
-pub enum Error {
-    #[error("A workspace with code {code} aleready exists")]
-    WS001 { code: String },
+#[derive(Debug, Clone)]
+pub enum ModelErrorKind {
+    EntityNotFound { message: String },
+    WorkspaceCodeAlreadyExists { code: String },
+}
+
+impl Display for ModelErrorKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", 11111)
+    }
 }

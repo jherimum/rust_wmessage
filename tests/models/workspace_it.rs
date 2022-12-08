@@ -1,6 +1,5 @@
-use anyhow::Result;
 use uuid::Uuid;
-use wmessage::models::{workspace::Workspace, Error};
+use wmessage::{commons::error::AppError, models::workspace::Workspace};
 
 use crate::{common::seed::new_workspace, models::build_context};
 
@@ -25,7 +24,7 @@ fn test_find_ws_when_exists() {
 
     let ws = Workspace::find(&mut conn, &id);
 
-    assert_eq!(ws.unwrap().unwrap(), Workspace::new(id, code));
+    assert_eq!(ws.unwrap().unwrap(), Workspace::new(code));
 }
 
 #[test]
@@ -35,15 +34,12 @@ fn test_ws_creation_when_exists_ws_with_same_code() {
     let code = "code";
     new_workspace(&mut conn, Uuid::new_v4(), "code");
 
-    let r: Result<Workspace, anyhow::Error> = Workspace::create(&mut conn, code);
-    let expected_error = Error::WS001 {
-        code: code.to_string(),
-    };
+    let r: Result<Workspace, AppError> = Workspace::new(code).save(&mut conn);
 
     match r {
         Ok(_) => assert!(false),
         Err(e) => {
-            assert_eq!(expected_error, e.downcast::<Error>().unwrap());
+            assert!(false);
         }
     }
 }
@@ -53,6 +49,6 @@ fn test_ws_creation_when_does_not_exists_ws_with_same_code() {
     let ctx = build_context("test_ws_creation_when_does_not_exists_ws_with_same_code");
     let mut conn = ctx.build_connection_and_migrate();
 
-    let ws = Workspace::create(&mut conn, "code").unwrap();
+    let ws = Workspace::new("code").save(&mut conn).unwrap();
     assert_eq!(ws, Workspace::find(&mut conn, &ws.id()).unwrap().unwrap());
 }
