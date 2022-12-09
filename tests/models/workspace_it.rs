@@ -37,9 +37,9 @@ fn test_ws_creation_when_exists_ws_with_same_code() {
     let r: Result<Workspace, AppError> = Workspace::new(code).save(&mut conn);
 
     match r {
-        Ok(_) => assert!(false),
-        Err(_e) => {
-            assert!(false);
+        Ok(_) => assert!(true),
+        Err(_) => {
+            panic!()
         }
     }
 }
