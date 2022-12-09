@@ -33,11 +33,11 @@ pub trait ConnectorPlugin {
     fn properties(&self) -> Vec<Property>;
     fn dispatchers(&self) -> HashMap<DispatchType, &dyn DispatcherPlugin>;
     fn dispatcher(&self, t: DispatchType) -> Option<&dyn DispatcherPlugin> {
-        self.dispatchers().get(&t).map(|f| *f)
+        self.dispatchers().get(&t).copied()
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Eq)]
 pub struct Property {
     key: &'static str,
     description: &'static str,
@@ -47,9 +47,9 @@ pub struct Property {
 impl Property {
     pub fn new(key: &'static str, description: &'static str, required: bool) -> Self {
         Self {
-            key: key,
-            description: description,
-            required: required,
+            key,
+            description,
+            required,
         }
     }
 }
@@ -72,15 +72,14 @@ impl Request {
     where
         D: for<'a> Deserialize<'a> + DeserializeOwned,
     {
-        serde_json::from_value::<D>(self.connector_props.clone()).map_err(|err| AppError::from(err))
+        serde_json::from_value::<D>(self.connector_props.clone()).map_err(AppError::from)
     }
 
     fn dispatcher_props<D>(&self) -> Result<D, AppError>
     where
         D: for<'a> Deserialize<'a> + DeserializeOwned,
     {
-        serde_json::from_value::<D>(self.dispatcher_props.clone())
-            .map_err(|err| AppError::from(err))
+        serde_json::from_value::<D>(self.dispatcher_props.clone()).map_err(AppError::from)
     }
 }
 

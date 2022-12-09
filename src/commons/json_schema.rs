@@ -12,10 +12,7 @@ impl JsonSchema {
     pub fn new(raw: &serde_json::Value) -> Result<Self, AppError> {
         let mut scope = Scope::new().supply_defaults();
         match scope.compile(raw.clone(), false) {
-            Ok(url) => Ok(JsonSchema {
-                scope: scope,
-                url: url,
-            }),
+            Ok(url) => Ok(JsonSchema { scope, url }),
             Err(e) => Err(AppError::from(e)),
         }
     }

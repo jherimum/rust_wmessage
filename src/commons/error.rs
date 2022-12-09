@@ -7,7 +7,7 @@ use valico::json_schema::SchemaError;
 
 use crate::models::ModelErrorKind;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AppErrorKind {
     IOError,
     PoolError,
@@ -20,7 +20,7 @@ pub enum AppErrorKind {
     PluginError,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AppError {
     kind: AppErrorKind,
     message: String,
@@ -67,7 +67,7 @@ impl Display for AppError {
 impl ResponseError for AppError {
     fn status_code(&self) -> actix_web::http::StatusCode {
         match &self.kind {
-            AppErrorKind::ModelError { kind } => StatusCode::CONFLICT,
+            AppErrorKind::ModelError { kind: _ } => StatusCode::CONFLICT,
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }

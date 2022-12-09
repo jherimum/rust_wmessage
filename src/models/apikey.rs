@@ -32,7 +32,7 @@ impl ApiKey {
             name: name.to_string(),
             prefix: prefix.to_string(),
             hash: hash.to_string(),
-            expires_at: expires_at.clone(),
+            expires_at: *expires_at,
         }
     }
 

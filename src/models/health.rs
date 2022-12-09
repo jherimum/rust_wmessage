@@ -3,7 +3,7 @@ use crate::schema::health::dsl::*;
 use diesel::prelude::*;
 use diesel::PgConnection;
 
-#[derive(Queryable, Debug, Clone, PartialEq)]
+#[derive(Queryable, Debug, Clone, PartialEq, Eq)]
 #[diesel(table_name = health)]
 pub struct Health {
     id: i32,
@@ -15,6 +15,6 @@ impl Health {
             .first::<Health>(conn)
             .optional()
             .map(|_| ())
-            .map_err(|err| AppError::from(err))
+            .map_err(AppError::from)
     }
 }

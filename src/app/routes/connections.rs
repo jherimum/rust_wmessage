@@ -27,14 +27,14 @@ pub fn routes() -> Scope {
 
 pub async fn create(
     pool: Data<DbPool>,
-    plugins: Data<ConnectorPlugins>,
+    _plugins: Data<ConnectorPlugins>,
     body: Json<ConnectionForm>,
     path: Path<Uuid>,
 ) -> impl Responder {
-    let form = body.into_inner();
+    let _form = body.into_inner();
     let ws_id = path.into_inner();
     let mut conn = pool.get().expect("error");
-    let ws = Workspace::find(&mut conn, &ws_id).expect("msg");
+    let _ws = Workspace::find(&mut conn, &ws_id).expect("msg");
 
     //let mut conn = pool.get().unwrap();
 
@@ -42,9 +42,9 @@ pub async fn create(
 }
 
 pub async fn all(
-    pool: Data<DbPool>,
-    plugins: Data<ConnectorPlugins>,
-    path: Path<Uuid>,
+    _pool: Data<DbPool>,
+    _plugins: Data<ConnectorPlugins>,
+    _path: Path<Uuid>,
 ) -> impl Responder {
     HttpResponse::Ok().finish()
 }

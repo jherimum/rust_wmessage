@@ -7,7 +7,7 @@ use diesel::{insert_into, PgConnection};
 use schema::users::dsl::*;
 use uuid::Uuid;
 
-#[derive(Insertable, Queryable, Identifiable, Debug, Clone, PartialEq)]
+#[derive(Insertable, Queryable, Identifiable, Debug, Clone, PartialEq, Eq)]
 #[diesel(table_name = users)]
 pub struct User {
     id: Uuid,
@@ -23,7 +23,7 @@ impl User {
             .filter(workspace_id.eq(&ws.id()).and(owner.eq(true)))
             .first::<User>(conn)
             .optional()
-            .map_err(|err| AppError::from(err))
+            .map_err(AppError::from)
     }
 
     pub fn id(&self) -> Uuid {
@@ -45,20 +45,20 @@ impl User {
     pub fn save(self, conn: &mut PgConnection) -> Result<User, AppError> {
         match insert_into(users).values(&self).execute(conn) {
             Ok(_) => Ok(self),
-            Err(e) => Err(AppError::database_error("password not inserted")),
+            Err(_) => Err(AppError::database_error("password not inserted")),
         }
     }
 
     pub fn new(
-        conn: &mut PgConnection,
+        _conn: &mut PgConnection,
         ws: &Workspace,
-        _email: &String,
+        _email: &str,
         password: &Password,
         _owner: bool,
     ) -> User {
         User {
             id: Uuid::new_v4(),
-            email: _email.clone(),
+            email: _email.to_string(),
             workspace_id: ws.id(),
             password_id: password.id(),
             owner: _owner,

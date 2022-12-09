@@ -38,7 +38,7 @@ async fn main() -> Result<(), AppError> {
             )
     })
     .bind((config.host, config.port))
-    .map_err(|err| AppError::from(err))?
+    .map_err(AppError::from)?
     .run()
     .await?;
 

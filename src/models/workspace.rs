@@ -7,7 +7,7 @@ use diesel::{insert_into, PgConnection};
 use schema::workspaces::dsl::*;
 use uuid::Uuid;
 
-#[derive(Insertable, Identifiable, Debug, Clone, PartialEq, Queryable)]
+#[derive(Insertable, Identifiable, Debug, Clone, PartialEq, Queryable, Eq)]
 #[diesel(table_name = workspaces)]
 pub struct Workspace {
     id: Uuid,
@@ -23,7 +23,7 @@ impl Workspace {
     }
 
     pub fn owner(&self, conn: &mut PgConnection) -> Result<User, AppError> {
-        match User::ws_owner(conn, &self)? {
+        match User::ws_owner(conn, self)? {
             Some(u) => Ok(u),
             None => Err(AppError::model_error(
                 super::ModelErrorKind::EntityNotFound {
@@ -38,7 +38,7 @@ impl Workspace {
             .filter(id.eq(ws_id))
             .first::<Workspace>(conn)
             .optional()
-            .map_err(|err| AppError::from(err))
+            .map_err(AppError::from)
     }
 
     pub fn id(&self) -> Uuid {
@@ -51,7 +51,7 @@ impl Workspace {
             .count()
             .get_result::<i64>(conn)
             .map(|count| count > 0)
-            .map_err(|err| AppError::from(err))
+            .map_err(AppError::from)
     }
 
     pub fn save(self, conn: &mut PgConnection) -> Result<Workspace, AppError> {
@@ -66,7 +66,7 @@ impl Workspace {
         match insert_into(schema::workspaces::dsl::workspaces)
             .values(&self)
             .execute(conn)
-            .map_err(|err| AppError::from(err))?
+            .map_err(AppError::from)?
         {
             1 => Ok(self),
             _ => Err(AppError::database_error("Workspace not inserted")),

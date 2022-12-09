@@ -35,6 +35,12 @@ pub struct StmpPlugin {
     smtp_plugin: EmailDispatcher,
 }
 
+impl Default for StmpPlugin {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl StmpPlugin {
     pub fn new() -> Self {
         StmpPlugin {
@@ -123,7 +129,7 @@ impl DispatcherPlugin for EmailDispatcher {
         let x = mailer.send(&email);
 
         match x {
-            Ok(r) => Ok(super::Response),
+            Ok(_) => Ok(super::Response),
             Err(e) => Err(AppError::from(e)),
         }
     }

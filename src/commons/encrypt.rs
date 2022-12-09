@@ -23,14 +23,14 @@ pub mod argon {
             self.argon()
                 .hash_password(clear_password.as_bytes(), &_salt)
                 .map(|ph| ph.to_string())
-                .map_err(|e| AppError::from(e))
+                .map_err(AppError::from)
         }
 
         fn verify(&self, clear_password: &str, _hash: &str) -> Result<bool, AppError> {
-            let password_hash = PasswordHash::new(_hash).map_err(|e| AppError::from(e))?;
+            let password_hash = PasswordHash::new(_hash).map_err(AppError::from)?;
             match argon2::PasswordVerifier::verify_password(
                 &self.argon(),
-                &clear_password.as_bytes(),
+                clear_password.as_bytes(),
                 &password_hash,
             ) {
                 Ok(_) => Ok(true),
@@ -44,7 +44,13 @@ pub mod argon {
             Argon2::default()
         }
         pub fn new() -> Self {
-            Argon()
+            Self()
+        }
+    }
+
+    impl Default for Argon {
+        fn default() -> Self {
+            Self::new()
         }
     }
 }

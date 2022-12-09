@@ -7,7 +7,7 @@ use uuid::Uuid;
 
 use crate::schema::passwords;
 
-#[derive(Insertable, Queryable, Identifiable, Debug, Clone, PartialEq)]
+#[derive(Insertable, Queryable, Identifiable, Debug, Clone, PartialEq, Eq)]
 #[diesel(table_name = passwords)]
 pub struct Password {
     id: Uuid,
@@ -16,7 +16,7 @@ pub struct Password {
 
 impl Password {
     pub fn new(plain_password: &str, encrypter: &dyn Encrypter) -> Result<Password, AppError> {
-        encrypter.encrypt(&plain_password).map(|_hash| Password {
+        encrypter.encrypt(plain_password).map(|_hash| Password {
             id: Uuid::new_v4(),
             hash: _hash,
         })
@@ -39,7 +39,7 @@ impl Password {
             .filter(id.eq(_id))
             .first::<Password>(conn)
             .optional()
-            .map_err(|err| AppError::from(err))
+            .map_err(AppError::from)
     }
 
     pub fn authenticate(

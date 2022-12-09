@@ -16,7 +16,7 @@ pub struct Channel {
 }
 
 impl Channel {
-    pub fn new(conn: &PgConnection, ws: &Workspace, _code: &String) -> Result<Channel, AppError> {
+    pub fn new(_conn: &PgConnection, ws: &Workspace, _code: &String) -> Result<Channel, AppError> {
         let _propert = json!("{}");
 
         let channel = Channel {

@@ -25,9 +25,9 @@ impl AppConfig {
         config::Config::builder()
             .add_source(config::Environment::default())
             .build()
-            .map_err(|err| AppError::from(err))?
+            .map_err(AppError::from)?
             .try_deserialize::<AppConfig>()
-            .map_err(|err| AppError::from(err))
+            .map_err(AppError::from)
     }
 
     pub async fn create_pool(&self) -> Result<DbPool, AppError> {
@@ -36,6 +36,6 @@ impl AppConfig {
         Pool::builder()
             .connection_timeout(Duration::from_secs(10))
             .build(manager)
-            .map_err(|err| AppError::from(err))
+            .map_err(AppError::from)
     }
 }

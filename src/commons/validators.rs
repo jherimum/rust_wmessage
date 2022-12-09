@@ -11,7 +11,7 @@ lazy_static! {
     pub static ref CODE_REGEX: Regex = Regex::new(r"\A[A-Z]+[[A-Z]_]*\z").unwrap();
 }
 
-#[derive(Serialize, PartialEq, Debug)]
+#[derive(Serialize, PartialEq, Debug, Eq)]
 pub enum PasswordSecurityLevel {
     VeryDangerous = 10,
     Dangerous = 20,
@@ -33,17 +33,17 @@ impl From<u8> for PasswordSecurityLevel {
     fn from(s: u8) -> Self {
         if s < 20 {
             PasswordSecurityLevel::VeryDangerous
-        } else if s >= 20 && s < 40 {
+        } else if (20..40).contains(&s) {
             PasswordSecurityLevel::Dangerous
-        } else if s >= 40 && s < 60 {
+        } else if (40..60).contains(&s) {
             PasswordSecurityLevel::VeryWeak
-        } else if s >= 60 && s < 80 {
+        } else if (60..80).contains(&s) {
             PasswordSecurityLevel::Weak
-        } else if s >= 80 && s < 90 {
+        } else if (80..90).contains(&s) {
             PasswordSecurityLevel::Good
-        } else if s >= 90 && s < 95 {
+        } else if (90..95).contains(&s) {
             PasswordSecurityLevel::Strong
-        } else if s >= 95 && s < 99 {
+        } else if (95..99).contains(&s) {
             PasswordSecurityLevel::VeryStrong
         } else {
             PasswordSecurityLevel::Invulnerable

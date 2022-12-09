@@ -36,7 +36,7 @@ impl MessageTypeVersion {
                 schema: schema_p,
                 vars: vars_p,
                 enabled: enabled_p,
-                message_type_id: message_type.id().clone(),
+                message_type_id: *message_type.id(),
             }),
             Err(e) => Err(e),
         }
