@@ -9,7 +9,7 @@ fn test_find_password_when_do_not_exists() {
 
     match Password::find(&mut conn, &uuid::Uuid::new_v4()) {
         Ok(None) => assert!(true),
-        _ => assert!(false),
+        _ => panic!(),
     }
 }
 
@@ -24,7 +24,7 @@ fn test_find_password_when_exists() {
 
     match Password::find(&mut conn, &id) {
         Ok(Some(_)) => assert!(true),
-        _ => assert!(false),
+        _ => panic!(),
     }
 }
 

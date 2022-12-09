@@ -20,7 +20,7 @@ fn test_find_ws_when_exists() {
     let id = uuid::Uuid::new_v4();
     let code = "CODE";
 
-    new_workspace(&mut conn, id, &code);
+    new_workspace(&mut conn, id, code);
 
     let ws = Workspace::find(&mut conn, &id);
 
@@ -38,7 +38,7 @@ fn test_ws_creation_when_exists_ws_with_same_code() {
 
     match r {
         Ok(_) => assert!(false),
-        Err(e) => {
+        Err(_e) => {
             assert!(false);
         }
     }

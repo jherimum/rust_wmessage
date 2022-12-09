@@ -13,7 +13,7 @@ pub struct TestContext {
 impl TestContext {
     pub fn build_connection_and_migrate(&self) -> PgConnection {
         let mut conn = PgConnection::establish(&format!("{}/{}", self.base_url, self.db_name))
-            .expect(&format!("Cannot connect to {} database", self.db_name));
+            .unwrap_or_else(|_| panic!("Cannot connect to {} database", self.db_name));
 
         MigrationHarness::run_pending_migrations(&mut conn, MIGRATIONS)
             .expect("failed do run migrate");
@@ -29,7 +29,7 @@ impl TestContext {
         let query = diesel::sql_query(format!("CREATE DATABASE {}", db_name).as_str());
         query
             .execute(&mut conn)
-            .expect(format!("Could not create database {}", db_name).as_str());
+            .unwrap_or_else(|_| panic!("Could not create database {}", db_name));
 
         Self {
             base_url: base_url.to_string(),
@@ -56,6 +56,6 @@ impl Drop for TestContext {
         let query = diesel::sql_query(format!("DROP DATABASE {}", self.db_name).as_str());
         query
             .execute(&mut conn)
-            .expect(&format!("Couldn't drop database {}", self.db_name));
+            .unwrap_or_else(|_| panic!("Couldn't drop database {}", self.db_name));
     }
 }
