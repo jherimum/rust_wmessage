@@ -4,53 +4,51 @@ use mockall::automock;
 #[automock]
 pub trait Encrypter {
     fn encrypt(&self, clear_password: &str) -> Result<String, AppError>;
-    fn verify(&self, clear_password: &str, _hash: &str) -> Result<bool, AppError>;
+    fn verify(&self, clear_password: &str, hash: &str) -> Result<bool, AppError>;
 }
 
 pub mod argon {
-    use argon2::{password_hash::SaltString, Argon2, PasswordHash, PasswordHasher};
+    use argon2::{
+        password_hash::SaltString, Argon2, PasswordHash, PasswordHasher, PasswordVerifier,
+    };
     use rand::rngs::OsRng;
 
     use crate::commons::error::AppError;
 
     use super::Encrypter;
 
-    pub struct Argon();
+    pub struct Argon<'a>(Argon2<'a>);
 
-    impl Encrypter for Argon {
+    impl Encrypter for Argon<'_> {
         fn encrypt(&self, clear_password: &str) -> Result<String, AppError> {
-            let _salt = SaltString::generate(&mut OsRng);
-            self.argon()
-                .hash_password(clear_password.as_bytes(), &_salt)
+            let salt = SaltString::generate(&mut OsRng);
+            self.0
+                .hash_password(clear_password.as_bytes(), &salt)
                 .map(|ph| ph.to_string())
                 .map_err(AppError::from)
         }
 
-        fn verify(&self, clear_password: &str, _hash: &str) -> Result<bool, AppError> {
-            let password_hash = PasswordHash::new(_hash).map_err(AppError::from)?;
-            match argon2::PasswordVerifier::verify_password(
-                &self.argon(),
-                clear_password.as_bytes(),
-                &password_hash,
-            ) {
+        fn verify(&self, clear_password: &str, hash: &str) -> Result<bool, AppError> {
+            let password_hash = PasswordHash::new(hash).map_err(AppError::from)?;
+            match self
+                .0
+                .verify_password(clear_password.as_bytes(), &password_hash)
+            {
                 Ok(_) => Ok(true),
                 Err(_) => Ok(false),
             }
         }
     }
 
-    impl Argon {
-        fn argon(&self) -> Argon2<'static> {
-            Argon2::default()
-        }
+    impl Argon<'_> {
         pub fn new() -> Self {
-            Self()
+            Argon(Argon2::default())
         }
     }
 
-    impl Default for Argon {
+    impl Default for Argon<'_> {
         fn default() -> Self {
-            Self::new()
+            Argon::new()
         }
     }
 }
@@ -60,10 +58,13 @@ mod tests {
 
     #[test]
     fn test_encrypter_verify() {
-        let e = Argon::new();
+        const PASSWORD_1: &str = "password1";
+        const PASSWORD_2: &str = "password2";
 
-        let hash = e.encrypt("password").unwrap();
-        assert!(e.verify("password", &hash).unwrap());
-        assert!(!e.verify("password1", &hash).unwrap());
+        let e = Argon::new();
+        let hash = e.encrypt(PASSWORD_1).unwrap();
+
+        assert!(e.verify(PASSWORD_1, &hash).unwrap());
+        assert!(!e.verify(PASSWORD_2, &hash).unwrap());
     }
 }
