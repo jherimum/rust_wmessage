@@ -31,7 +31,7 @@ impl User {
     }
 
     pub fn password(&self, conn: &mut PgConnection) -> Result<Password, AppError> {
-        let r = Password::find(conn, &self.password_id)?;
+        let r = Password::find(conn, self.password_id)?;
         match r {
             Some(p) => Ok(p),
             None => Err(AppError::model_error(

@@ -1,5 +1,6 @@
 use crate::commons::encrypt::Encrypter;
 use crate::commons::error::AppError;
+use crate::commons::new_uuid;
 use crate::schema::passwords::dsl::*;
 use diesel::prelude::*;
 use diesel::{insert_into, PgConnection};
@@ -15,11 +16,19 @@ pub struct Password {
 }
 
 impl Password {
-    pub fn new(plain_password: &str, encrypter: &dyn Encrypter) -> Result<Password, AppError> {
+    fn new_with_id(
+        _id: Uuid,
+        plain_password: &str,
+        encrypter: &dyn Encrypter,
+    ) -> Result<Password, AppError> {
         encrypter.encrypt(plain_password).map(|_hash| Password {
-            id: Uuid::new_v4(),
+            id: _id,
             hash: _hash,
         })
+    }
+
+    pub fn new(plain_password: &str, encrypter: &dyn Encrypter) -> Result<Password, AppError> {
+        Self::new_with_id(new_uuid(), plain_password, encrypter)
     }
 
     pub fn save(self, conn: &mut PgConnection) -> Result<Password, AppError> {
@@ -34,7 +43,7 @@ impl Password {
         self.id
     }
 
-    pub fn find(conn: &mut PgConnection, _id: &Uuid) -> Result<Option<Password>, AppError> {
+    pub fn find(conn: &mut PgConnection, _id: Uuid) -> Result<Option<Password>, AppError> {
         passwords
             .filter(id.eq(_id))
             .first::<Password>(conn)
@@ -53,7 +62,7 @@ impl Password {
 
 #[cfg(test)]
 mod test {
-    use crate::commons::encrypt::MockEncrypter;
+    use crate::commons::{encrypt::MockEncrypter, new_uuid};
 
     use super::Password;
 
@@ -67,8 +76,15 @@ mod test {
 
     #[test]
     fn test_new_password() {
-        let pass = Password::new("password", &mock_encrypt()).unwrap();
-        assert_eq!(pass.hash, "password");
+        let id = new_uuid();
+        let pass = Password::new_with_id(id, "password", &mock_encrypt()).unwrap();
+        assert_eq!(
+            pass,
+            Password {
+                id: id,
+                hash: "password".to_string()
+            }
+        );
     }
 
     #[test]

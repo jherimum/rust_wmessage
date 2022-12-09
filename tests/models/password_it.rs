@@ -7,7 +7,7 @@ fn test_find_password_when_do_not_exists() {
     let ctx = build_context("test_find_password_when_do_not_exists");
     let mut conn = ctx.build_connection_and_migrate();
 
-    match Password::find(&mut conn, &uuid::Uuid::new_v4()) {
+    match Password::find(&mut conn, uuid::Uuid::new_v4()) {
         Ok(None) => assert!(true),
         _ => panic!(),
     }
@@ -22,7 +22,7 @@ fn test_find_password_when_exists() {
 
     new_password(&mut conn, &id, "hash");
 
-    match Password::find(&mut conn, &id) {
+    match Password::find(&mut conn, id) {
         Ok(Some(_)) => assert!(true),
         _ => panic!(),
     }
@@ -39,8 +39,5 @@ fn test_pass_save() {
         .save(&mut conn)
         .unwrap();
 
-    assert_eq!(
-        pass,
-        Password::find(&mut conn, &pass.id()).unwrap().unwrap()
-    );
+    assert_eq!(pass, Password::find(&mut conn, pass.id()).unwrap().unwrap());
 }
