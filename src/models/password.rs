@@ -1,6 +1,6 @@
 use crate::commons::encrypt::Encrypter;
 use crate::commons::error::AppError;
-use crate::commons::new_uuid;
+use crate::commons::uuid::new_uuid;
 use crate::schema::passwords::dsl::*;
 use diesel::prelude::*;
 use diesel::{insert_into, PgConnection};
@@ -11,12 +11,12 @@ use crate::schema::passwords;
 #[derive(Insertable, Queryable, Identifiable, Debug, Clone, PartialEq, Eq)]
 #[diesel(table_name = passwords)]
 pub struct Password {
-    id: Uuid,
-    hash: String,
+    pub id: Uuid,
+    pub hash: String,
 }
 
 impl Password {
-    fn new_with_id(
+    pub fn new_with_id(
         _id: Uuid,
         plain_password: &str,
         encrypter: &dyn Encrypter,
@@ -62,7 +62,7 @@ impl Password {
 
 #[cfg(test)]
 mod test {
-    use crate::commons::{encrypt::MockEncrypter, new_uuid};
+    use crate::commons::{encrypt::MockEncrypter, uuid::new_uuid};
 
     use super::Password;
 

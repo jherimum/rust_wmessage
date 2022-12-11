@@ -4,6 +4,7 @@ use serde_json::Value as Json;
 use uuid::Uuid;
 
 use crate::commons::error::AppError;
+use crate::commons::uuid::new_uuid;
 
 use super::workspace::Workspace;
 
@@ -20,7 +21,7 @@ impl Channel {
         let _propert = json!("{}");
 
         let channel = Channel {
-            id: Uuid::new_v4(),
+            id: new_uuid(),
             workspace_id: ws.id(),
             code: _code.to_owned(),
             properties: _propert,

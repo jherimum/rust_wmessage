@@ -9,6 +9,7 @@ use rand::distributions::Alphanumeric;
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    commons::mock_uuid::new_uuid,
     config::DbPool,
     models::{apikey::ApiKey, workspace::Workspace},
 };
@@ -49,7 +50,7 @@ pub async fn register(
         Ok(Some(ws)) => ws,
     };
 
-    let api_key = uuid::Uuid::new_v4().to_string();
+    let api_key = new_uuid().to_string();
     let prefix = Alphanumeric.sample_string(&mut rand::thread_rng(), 16);
     let hash = bcrypt::hash(api_key, DEFAULT_COST).expect("msg");
 

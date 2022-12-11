@@ -1,4 +1,7 @@
-use wmessage::{commons::encrypt::MockEncrypter, models::password::Password};
+use wmessage::{
+    commons::{encrypt::MockEncrypter, uuid::new_uuid},
+    models::password::Password,
+};
 
 use crate::{common::seed::new_password, models::build_context};
 
@@ -7,7 +10,7 @@ fn test_find_password_when_do_not_exists() {
     let ctx = build_context("test_find_password_when_do_not_exists");
     let mut conn = ctx.build_connection_and_migrate();
 
-    match Password::find(&mut conn, uuid::Uuid::new_v4()) {
+    match Password::find(&mut conn, new_uuid()) {
         Ok(None) => assert!(true),
         _ => panic!(),
     }
@@ -18,7 +21,7 @@ fn test_find_password_when_exists() {
     let ctx = build_context("test_find_password_when_exists");
     let mut conn = ctx.build_connection_and_migrate();
 
-    let id = uuid::Uuid::new_v4();
+    let id = new_uuid();
 
     new_password(&mut conn, &id, "hash");
 
@@ -34,7 +37,9 @@ fn test_pass_save() {
     let mut conn = ctx.build_connection_and_migrate();
     let encrypter = MockEncrypter::new();
 
-    let pass = Password::new("password@123", &encrypter)
+    let id = new_uuid();
+
+    let pass = Password::new_with_id(id, "password@123", &encrypter)
         .unwrap()
         .save(&mut conn)
         .unwrap();

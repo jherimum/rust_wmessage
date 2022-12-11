@@ -3,7 +3,10 @@ use uuid::Uuid;
 
 use diesel::prelude::*;
 
-use crate::{commons::error::AppError, schema::api_keys};
+use crate::{
+    commons::{error::AppError, uuid::new_uuid},
+    schema::api_keys,
+};
 
 use super::workspace::Workspace;
 
@@ -27,7 +30,7 @@ impl ApiKey {
         expires_at: &NaiveDateTime,
     ) -> ApiKey {
         ApiKey {
-            id: Uuid::new_v4(),
+            id: new_uuid(),
             workspace_id: ws.id(),
             name: name.to_string(),
             prefix: prefix.to_string(),

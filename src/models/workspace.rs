@@ -1,5 +1,6 @@
 use super::user::User;
 use crate::commons::error::AppError;
+use crate::commons::uuid::new_uuid;
 use crate::schema::{self, workspaces};
 use diesel::prelude::*;
 use diesel::OptionalExtension;
@@ -17,7 +18,7 @@ pub struct Workspace {
 impl Workspace {
     pub fn new(ws_code: &str) -> Self {
         Workspace {
-            id: Uuid::new_v4(),
+            id: new_uuid(),
             code: ws_code.to_string(),
         }
     }

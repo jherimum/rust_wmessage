@@ -4,8 +4,11 @@ pub mod error;
 pub mod json_schema;
 pub mod validators;
 
-use uuid::Uuid;
+use mockall::automock;
 
-pub fn new_uuid() -> Uuid {
-    Uuid::new_v4()
+#[automock]
+pub mod uuid {
+    pub fn new_uuid() -> uuid::Uuid {
+        uuid::Uuid::new_v4()
+    }
 }

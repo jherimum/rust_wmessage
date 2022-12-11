@@ -1,5 +1,7 @@
-use uuid::Uuid;
-use wmessage::{commons::error::AppError, models::workspace::Workspace};
+use wmessage::{
+    commons::{error::AppError, uuid::new_uuid},
+    models::workspace::Workspace,
+};
 
 use crate::{common::seed::new_workspace, models::build_context};
 
@@ -8,7 +10,7 @@ fn test_find_ws_when_do_not_exists() {
     let ctx = build_context("test_find_ws_when_do_not_exists");
     let mut conn = ctx.build_connection_and_migrate();
 
-    let ws = Workspace::find(&mut conn, &uuid::Uuid::new_v4());
+    let ws = Workspace::find(&mut conn, &new_uuid());
     assert!(ws.is_ok() && ws.unwrap().is_none());
 }
 
@@ -17,7 +19,7 @@ fn test_find_ws_when_exists() {
     let ctx = build_context("test_find_ws_when_exists");
     let mut conn = ctx.build_connection_and_migrate();
 
-    let id = uuid::Uuid::new_v4();
+    let id = new_uuid();
     let code = "CODE";
 
     new_workspace(&mut conn, id, code);
@@ -32,7 +34,7 @@ fn test_ws_creation_when_exists_ws_with_same_code() {
     let ctx = build_context("test_ws_creation_when_exists_ws_with_same_code");
     let mut conn = ctx.build_connection_and_migrate();
     let code = "code";
-    new_workspace(&mut conn, Uuid::new_v4(), "code");
+    new_workspace(&mut conn, new_uuid(), "code");
 
     let r: Result<Workspace, AppError> = Workspace::new(code).save(&mut conn);
 

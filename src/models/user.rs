@@ -1,6 +1,7 @@
 use super::password::Password;
 use super::workspace::Workspace;
 use crate::commons::error::AppError;
+use crate::commons::uuid::new_uuid;
 use crate::schema::{self, users};
 use diesel::prelude::*;
 use diesel::{insert_into, PgConnection};
@@ -57,7 +58,7 @@ impl User {
         _owner: bool,
     ) -> User {
         User {
-            id: Uuid::new_v4(),
+            id: new_uuid(),
             email: _email.to_string(),
             workspace_id: ws.id(),
             password_id: password.id(),

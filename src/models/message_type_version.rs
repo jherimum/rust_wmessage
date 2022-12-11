@@ -1,5 +1,5 @@
 use crate::{
-    commons::{error::AppError, json_schema::JsonSchema, new_uuid},
+    commons::{error::AppError, json_schema::JsonSchema, uuid::new_uuid},
     schema::message_type_versions,
 };
 use diesel::{insert_into, prelude::*};
