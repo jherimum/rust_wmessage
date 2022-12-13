@@ -1,14 +1,14 @@
 use super::user::User;
 use crate::commons::error::AppError;
 use crate::commons::uuid::new_uuid;
-use crate::schema::{self, workspaces};
+use crate::schema::workspaces;
+use derive_getters::Getters;
 use diesel::prelude::*;
 use diesel::OptionalExtension;
 use diesel::{insert_into, PgConnection};
-use schema::workspaces::dsl::*;
 use uuid::Uuid;
 
-#[derive(Insertable, Identifiable, Debug, Clone, PartialEq, Queryable, Eq)]
+#[derive(Insertable, Identifiable, Debug, Clone, PartialEq, Queryable, Eq, Getters)]
 #[diesel(table_name = workspaces)]
 pub struct Workspace {
     id: Uuid,
@@ -16,10 +16,10 @@ pub struct Workspace {
 }
 
 impl Workspace {
-    pub fn new(ws_code: &str) -> Self {
+    pub fn new(code: &str) -> Self {
         Workspace {
             id: new_uuid(),
-            code: ws_code.to_string(),
+            code: code.to_string(),
         }
     }
 
@@ -34,21 +34,17 @@ impl Workspace {
         }
     }
 
-    pub fn find(conn: &mut PgConnection, ws_id: &Uuid) -> Result<Option<Workspace>, AppError> {
-        workspaces
-            .filter(id.eq(ws_id))
+    pub fn find(conn: &mut PgConnection, id: &Uuid) -> Result<Option<Workspace>, AppError> {
+        workspaces::table
+            .filter(workspaces::id.eq(id))
             .first::<Workspace>(conn)
             .optional()
             .map_err(AppError::from)
     }
 
-    pub fn id(&self) -> Uuid {
-        self.id
-    }
-
-    pub fn exists_code(conn: &mut PgConnection, _code: &str) -> Result<bool, AppError> {
+    pub fn exists_code(conn: &mut PgConnection, code: &str) -> Result<bool, AppError> {
         workspaces::table
-            .filter(code.eq(_code))
+            .filter(workspaces::code.eq(code))
             .count()
             .get_result::<i64>(conn)
             .map(|count| count > 0)
@@ -64,7 +60,7 @@ impl Workspace {
             ));
         }
 
-        match insert_into(schema::workspaces::dsl::workspaces)
+        match insert_into(workspaces::table)
             .values(&self)
             .execute(conn)
             .map_err(AppError::from)?

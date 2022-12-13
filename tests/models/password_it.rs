@@ -44,5 +44,10 @@ fn test_pass_save() {
         .save(&mut conn)
         .unwrap();
 
-    assert_eq!(pass, Password::find(&mut conn, pass.id()).unwrap().unwrap());
+    assert_eq!(
+        pass,
+        Password::find(&mut conn, pass.id().clone())
+            .unwrap()
+            .unwrap()
+    );
 }

@@ -3,9 +3,9 @@ use actix_web::web::{self, scope, Data};
 use actix_web::{App, HttpResponse, HttpServer};
 
 use log::info;
-use wmessage::app::routes::apikey;
 use wmessage::app::routes::health::{self};
 use wmessage::app::routes::registrations::{self};
+use wmessage::app::routes::{apikey, channels};
 use wmessage::app::routes::{connections, plugins};
 use wmessage::commons::error::AppError;
 use wmessage::config::AppConfig;
@@ -36,6 +36,7 @@ async fn main() -> Result<(), AppError> {
                     .service(plugins::routes())
                     .service(registrations::routes())
                     .service(web::resource("").route(web::get().to(index)))
+                    .service(channels::routes())
                     .service(scope("/workspaces/{ws_id}").service(connections::routes())),
             )
     })

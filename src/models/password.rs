@@ -1,15 +1,13 @@
 use crate::commons::encrypt::Encrypter;
 use crate::commons::error::AppError;
 use crate::commons::uuid::new_uuid;
-use crate::schema::passwords::dsl::*;
+use crate::schema::passwords;
+use derive_getters::Getters;
 use diesel::prelude::*;
 use diesel::{insert_into, PgConnection};
-use lazy_static::__Deref;
 use uuid::Uuid;
 
-use crate::schema::passwords;
-
-#[derive(Insertable, Queryable, Identifiable, Debug, Clone, PartialEq, Eq)]
+#[derive(Insertable, Queryable, Identifiable, Debug, Clone, PartialEq, Eq, Getters)]
 #[diesel(table_name = passwords)]
 pub struct Password {
     pub id: Uuid,
@@ -18,12 +16,12 @@ pub struct Password {
 
 impl Password {
     pub fn new_with_id(
-        _id: Uuid,
+        id: Uuid,
         plain_password: &str,
         encrypter: &dyn Encrypter,
     ) -> Result<Password, AppError> {
         encrypter.encrypt(plain_password).map(|_hash| Password {
-            id: _id,
+            id: id,
             hash: _hash,
         })
     }
@@ -33,20 +31,16 @@ impl Password {
     }
 
     pub fn save(self, conn: &mut PgConnection) -> Result<Password, AppError> {
-        match insert_into(passwords).values(&self).execute(conn) {
+        match insert_into(passwords::table).values(&self).execute(conn) {
             Ok(1) => Ok(self),
             Ok(_) => Err(AppError::database_error("password not inserted")),
             Err(err) => Err(AppError::from(err)),
         }
     }
 
-    pub fn id(&self) -> Uuid {
-        self.id
-    }
-
-    pub fn find(conn: &mut PgConnection, _id: Uuid) -> Result<Option<Password>, AppError> {
-        passwords
-            .filter(id.eq(_id))
+    pub fn find(conn: &mut PgConnection, id: Uuid) -> Result<Option<Password>, AppError> {
+        passwords::table
+            .filter(passwords::id.eq(id))
             .first::<Password>(conn)
             .optional()
             .map_err(AppError::from)

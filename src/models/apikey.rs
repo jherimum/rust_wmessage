@@ -1,7 +1,6 @@
 use crate::commons::encrypt::Encrypter;
 use crate::commons::error::AppError;
 use crate::commons::uuid::new_uuid;
-use crate::schema::api_keys::dsl::*;
 use chrono::{Duration, NaiveDateTime, Utc};
 use derive_getters::Getters;
 use diesel::prelude::*;
@@ -25,7 +24,7 @@ pub struct ApiKey {
 impl ApiKey {
     pub fn new(
         ws: Workspace,
-        _name: &str,
+        name: &str,
         ttl: u8,
         encrypter: impl Encrypter,
     ) -> Result<(ApiKey, String), AppError> {
@@ -34,8 +33,8 @@ impl ApiKey {
         Ok((
             ApiKey {
                 id: _id,
-                workspace_id: ws.id(),
-                name: _name.to_string(),
+                workspace_id: ws.id().clone(),
+                name: name.to_string(),
                 hash: encrypter.encrypt(&key.to_string())?,
                 expires_at: (Utc::now() + Duration::days(ttl as i64)).naive_utc(),
             },
@@ -44,7 +43,7 @@ impl ApiKey {
     }
 
     pub fn save(&self, conn: &mut PgConnection) -> Result<ApiKey, AppError> {
-        match insert_into(api_keys).values(self).execute(conn) {
+        match insert_into(api_keys::table).values(self).execute(conn) {
             Ok(1) => Ok(self.clone()),
             Ok(_) => Err(AppError::database_error("apikey not inserted")),
             Err(err) => Err(AppError::from(err)),

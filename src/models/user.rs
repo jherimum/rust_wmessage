@@ -2,13 +2,13 @@ use super::password::Password;
 use super::workspace::Workspace;
 use crate::commons::error::AppError;
 use crate::commons::uuid::new_uuid;
-use crate::schema::{self, users};
+use crate::schema::users;
+use derive_getters::Getters;
 use diesel::prelude::*;
 use diesel::{insert_into, PgConnection};
-use schema::users::dsl::*;
 use uuid::Uuid;
 
-#[derive(Insertable, Queryable, Identifiable, Debug, Clone, PartialEq, Eq)]
+#[derive(Insertable, Queryable, Identifiable, Debug, Clone, PartialEq, Eq, Getters)]
 #[diesel(table_name = users)]
 pub struct User {
     id: Uuid,
@@ -20,15 +20,11 @@ pub struct User {
 
 impl User {
     pub fn ws_owner(conn: &mut PgConnection, ws: &Workspace) -> Result<Option<User>, AppError> {
-        users
-            .filter(workspace_id.eq(&ws.id()).and(owner.eq(true)))
+        users::table
+            .filter(users::workspace_id.eq(&ws.id()).and(users::owner.eq(true)))
             .first::<User>(conn)
             .optional()
             .map_err(AppError::from)
-    }
-
-    pub fn id(&self) -> Uuid {
-        self.id
     }
 
     pub fn password(&self, conn: &mut PgConnection) -> Result<Password, AppError> {
@@ -44,7 +40,7 @@ impl User {
     }
 
     pub fn save(self, conn: &mut PgConnection) -> Result<User, AppError> {
-        match insert_into(users).values(&self).execute(conn) {
+        match insert_into(users::table).values(&self).execute(conn) {
             Ok(_) => Ok(self),
             Err(_) => Err(AppError::database_error("password not inserted")),
         }
@@ -53,16 +49,16 @@ impl User {
     pub fn new(
         _conn: &mut PgConnection,
         ws: &Workspace,
-        _email: &str,
+        email: &str,
         password: &Password,
-        _owner: bool,
+        owner: bool,
     ) -> User {
         User {
             id: new_uuid(),
-            email: _email.to_string(),
-            workspace_id: ws.id(),
-            password_id: password.id(),
-            owner: _owner,
+            email: email.to_string(),
+            workspace_id: ws.id().clone(),
+            password_id: password.id().clone(),
+            owner: owner,
         }
     }
 }
