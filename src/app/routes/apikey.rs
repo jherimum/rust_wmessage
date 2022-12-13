@@ -4,13 +4,13 @@ use actix_web::{
     HttpResponse,
 };
 use chrono::NaiveDateTime;
-use diesel::result;
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    app::routes::find_workspace,
     commons::{encrypt::argon::Argon, error::AppError},
     config::DbPool,
-    models::{apikey::ApiKey, workspace::Workspace},
+    models::apikey::ApiKey,
 };
 use uuid::Uuid;
 
@@ -50,7 +50,7 @@ pub async fn create(
     let ws_id = path.into_inner();
     let form = body.into_inner();
 
-    let ws = Workspace::find(&mut conn, &ws_id).unwrap().unwrap();
+    let ws = find_workspace(&mut conn, ws_id)?;
     let result = ApiKey::new(ws, &form.name, form.ttl, Argon::default())?;
     let tuple = (result.0.save(&mut conn)?, result.1);
 

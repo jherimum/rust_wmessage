@@ -41,6 +41,8 @@ regex = "1.7"
 derive-getters = "0.2"
 valico = "3"
 
+anyhow = "1.0.66"
+
 [dependencies.url]
 features = ["serde"]
 version = "2"

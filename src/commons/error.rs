@@ -1,12 +1,14 @@
 use std::fmt::Display;
 
 use actix_web::{http::StatusCode, HttpResponse, ResponseError};
-use bcrypt::BcryptError;
 use config::ConfigError;
 use serde::Serialize;
+use thiserror::Error;
 use valico::json_schema::SchemaError;
 
 use crate::models::ModelErrorKind;
+
+use super::rest::RestErrorKind;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AppErrorKind {
@@ -14,14 +16,15 @@ pub enum AppErrorKind {
     PoolError,
     DatabaseError,
     EncryptionError,
-    ModelError { kind: ModelErrorKind },
+    ModelError(ModelErrorKind),
+    RestError(RestErrorKind),
     ConfigurationError,
     JsonSchemaError,
     JsonError,
     PluginError,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Error)]
 pub struct AppError {
     kind: AppErrorKind,
     message: String,
@@ -33,10 +36,26 @@ struct AppErrorResponse {
     message: String,
 }
 
+impl From<AppError> for AppErrorResponse {
+    fn from(err: AppError) -> Self {
+        AppErrorResponse {
+            message: err.message,
+        }
+    }
+}
+
 impl AppError {
+    pub fn not_found(message: &str) -> AppError {
+        AppError {
+            kind: AppErrorKind::RestError(RestErrorKind::NotFound),
+            message: message.to_string(),
+            cause: None,
+        }
+    }
+
     pub fn model_error(kind: ModelErrorKind) -> Self {
         AppError {
-            kind: AppErrorKind::ModelError { kind: kind.clone() },
+            kind: AppErrorKind::ModelError(kind.clone()),
             message: kind.to_string(),
             cause: None,
         }
@@ -68,15 +87,14 @@ impl Display for AppError {
 impl ResponseError for AppError {
     fn status_code(&self) -> actix_web::http::StatusCode {
         match &self.kind {
-            AppErrorKind::ModelError { kind: _ } => StatusCode::CONFLICT,
+            AppErrorKind::ModelError(_) => StatusCode::CONFLICT,
+            AppErrorKind::RestError(RestErrorKind::NotFound) => StatusCode::NOT_FOUND,
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 
     fn error_response(&self) -> actix_web::HttpResponse<actix_web::body::BoxBody> {
-        HttpResponse::build(self.status_code()).json(AppErrorResponse {
-            message: self.message.clone(),
-        })
+        HttpResponse::build(self.status_code()).json(AppErrorResponse::from(self.clone()))
     }
 }
 
@@ -152,16 +170,6 @@ impl From<diesel::result::Error> for AppError {
 
 impl From<argon2::password_hash::Error> for AppError {
     fn from(err: argon2::password_hash::Error) -> Self {
-        AppError {
-            kind: AppErrorKind::EncryptionError,
-            message: "Encryption Error".to_string(),
-            cause: Some(err.to_string()),
-        }
-    }
-}
-
-impl From<BcryptError> for AppError {
-    fn from(err: BcryptError) -> Self {
         AppError {
             kind: AppErrorKind::EncryptionError,
             message: "Encryption Error".to_string(),

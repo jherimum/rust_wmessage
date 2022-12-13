@@ -1,5 +1,6 @@
 use crate::commons::error::AppError;
 use crate::commons::uuid::new_uuid;
+
 use crate::schema::{self, channels};
 use diesel::prelude::*;
 use diesel::{insert_into, PgConnection};
@@ -21,13 +22,19 @@ pub struct Channel {
 }
 
 impl Channel {
-    pub fn new(ws: Workspace, code: String, desc: String, vars: Value, enabled: bool) -> Channel {
+    pub fn new(
+        ws: Workspace,
+        code: &str,
+        description: &str,
+        vars: Value,
+        enabled: bool,
+    ) -> Channel {
         Channel {
             id: new_uuid(),
             workspace_id: ws.id().clone(),
             code: code.to_uppercase(),
             vars: vars,
-            description: desc,
+            description: description.to_string(),
             enabled: enabled,
         }
     }
@@ -41,7 +48,7 @@ impl Channel {
             .map_err(AppError::from)
     }
 
-    pub fn save(&self, conn: &mut PgConnection) -> Result<Channel, AppError> {
+    pub fn save(self, conn: &mut PgConnection) -> Result<Channel, AppError> {
         if Self::exists_code(conn, &self.code)? {
             return Err(AppError::model_error(
                 crate::models::ModelErrorKind::ChannelCodeAlreadyExists {
@@ -50,8 +57,8 @@ impl Channel {
             ));
         }
 
-        match insert_into(dsl::channels).values(self).execute(conn) {
-            Ok(1) => Ok(self.clone()),
+        match insert_into(dsl::channels).values(&self).execute(conn) {
+            Ok(1) => Ok(self),
             Ok(_) => Err(AppError::database_error("channel not inserted")),
             Err(err) => Err(AppError::from(err)),
         }

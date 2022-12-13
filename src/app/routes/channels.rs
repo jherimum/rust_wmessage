@@ -1,9 +1,11 @@
 use actix_web::{
-    web::{self, get, patch, post},
+    web::{self, get, patch, post, Data, Json},
     HttpResponse, Scope,
 };
+use serde::{Deserialize, Serialize};
 
-use crate::commons::error::AppError;
+use super::find_workspace;
+use crate::{commons::error::AppError, config::DbPool, models::channel::Channel};
 
 pub fn routes() -> Scope {
     let channels = web::resource("")
@@ -18,8 +20,44 @@ pub fn routes() -> Scope {
         .service(channel)
 }
 
-async fn create() -> Result<HttpResponse, AppError> {
-    todo!()
+#[derive(Deserialize, Debug, Clone)]
+struct ChannelForm {
+    code: String,
+    description: String,
+    vars: serde_json::Value,
+    enabled: bool,
+}
+
+#[derive(Serialize, Debug, Clone)]
+struct ChannelResponse {
+    id: uuid::Uuid,
+    code: String,
+    description: String,
+    vars: serde_json::Value,
+    enabled: bool,
+    ws_url: url::Url,
+}
+
+async fn create(
+    pool: Data<DbPool>,
+    path: web::Path<uuid::Uuid>,
+    payload: Json<ChannelForm>,
+) -> Result<HttpResponse, AppError> {
+    let mut conn = pool.get().map_err(AppError::from)?;
+
+    let form = payload.into_inner();
+    let ws_id = path.into_inner();
+
+    let channel = Channel::new(
+        find_workspace(&mut conn, ws_id)?,
+        &form.code,
+        &form.description,
+        form.vars,
+        form.enabled,
+    )
+    .save(&mut conn)?;
+
+    Ok(HttpResponse::Ok().finish())
 }
 
 async fn all() -> Result<HttpResponse, AppError> {
