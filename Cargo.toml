@@ -14,7 +14,6 @@ derive_more = "0.99"
 diesel = {version = "2", features = ["postgres", "r2d2", "uuid", "chrono", "serde_json"]}
 dotenv = "0.15"
 dyn-clone = "1"
-env_logger = "0.10"
 log = "0.4"
 r2d2 = "0.8.10"
 rand = "0.8"
@@ -39,6 +38,7 @@ lazy_static = "1.4"
 
 regex = "1.7"
 
+derive-getters = "0.2"
 valico = "3"
 
 [dependencies.url]

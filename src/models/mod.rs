@@ -13,6 +13,7 @@ use std::fmt::Display;
 pub enum ModelErrorKind {
     EntityNotFound { message: String },
     WorkspaceCodeAlreadyExists { code: String },
+    ChannelCodeAlreadyExists { code: String },
 }
 
 impl Display for ModelErrorKind {

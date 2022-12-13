@@ -37,11 +37,10 @@ async fn register(
 ) -> Result<HttpResponse, AppError> {
     let form = body.into_inner();
     let mut conn = pool.get().map_err(AppError::from)?;
-    let encrypter = Argon::new();
 
     conn.transaction(|conn| {
         let ws = Workspace::new(&form.workspace_code).save(conn)?;
-        let password = Password::new(&form.user_password, &encrypter)?.save(conn)?;
+        let password = Password::new(&form.user_password, &Argon::new())?.save(conn)?;
         let _user = User::new(conn, &ws, &form.user_email, &password, true).save(conn)?;
         Ok(())
     })

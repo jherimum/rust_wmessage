@@ -33,8 +33,9 @@ create table channels(
 	id uuid NOT NULL,
 	workspace_id uuid NOT NULL,
 	code varchar NOT NULL,
-	name varchar not null,
-	properties jsonb NOT NULL,
+	description varchar not null,
+	vars jsonb NOT NULL,
+	enabled boolean NOT NULL,
 	CONSTRAINT pk_channels PRIMARY KEY (id),
 	CONSTRAINT ux_channels_code UNIQUE (workspace_id, code),
 	CONSTRAINT channels_ws_fk FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
@@ -70,11 +71,8 @@ create table api_keys(
 	id uuid NOT NULL,
 	workspace_id uuid NOT NULL,
 	name varchar NOT NULL,
-	prefix varchar NOT NULL,
 	hash varchar NOT NULL,
 	expires_at timestamp NOT NULL,
 	CONSTRAINT pk_api_keys PRIMARY KEY (id),
-	CONSTRAINT users_fk FOREIGN KEY (workspace_id) REFERENCES workspaces(id),
-	CONSTRAINT ux_worspace_prefix UNIQUE (workspace_id, prefix)
-
+	CONSTRAINT workspace_fk FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
 )

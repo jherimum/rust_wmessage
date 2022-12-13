@@ -3,8 +3,8 @@ use mockall::automock;
 
 #[automock]
 pub trait Encrypter {
-    fn encrypt(&self, clear_password: &str) -> Result<String, AppError>;
-    fn verify(&self, clear_password: &str, hash: &str) -> Result<bool, AppError>;
+    fn encrypt(&self, plain_input: &str) -> Result<String, AppError>;
+    fn verify(&self, plain_input: &str, hash: &str) -> Result<bool, AppError>;
 }
 
 pub mod argon {

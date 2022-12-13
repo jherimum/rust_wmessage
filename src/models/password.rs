@@ -4,6 +4,7 @@ use crate::commons::uuid::new_uuid;
 use crate::schema::passwords::dsl::*;
 use diesel::prelude::*;
 use diesel::{insert_into, PgConnection};
+use lazy_static::__Deref;
 use uuid::Uuid;
 
 use crate::schema::passwords;

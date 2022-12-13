@@ -2,6 +2,8 @@ use actix_web::middleware::Logger;
 use actix_web::web::{self, scope, Data};
 use actix_web::{App, HttpResponse, HttpServer};
 
+use log::info;
+use wmessage::app::routes::apikey;
 use wmessage::app::routes::health::{self};
 use wmessage::app::routes::registrations::{self};
 use wmessage::app::routes::{connections, plugins};
@@ -13,12 +15,11 @@ extern crate lazy_static;
 
 #[actix_web::main]
 async fn main() -> Result<(), AppError> {
-    env_logger::init_from_env(env_logger::Env::default().default_filter_or("debug"));
-
     let config = AppConfig::from_env()?;
     let pool = config.create_pool().await?;
-
     let smtp_plugin = smtp::StmpPlugin::new();
+
+    info!("Starting the server at {}:{}", config.host, config.port);
 
     HttpServer::new(move || {
         App::new()
@@ -30,6 +31,7 @@ async fn main() -> Result<(), AppError> {
             )])))
             .service(
                 scope("/api")
+                    .service(apikey::create)
                     .service(health::routes())
                     .service(plugins::routes())
                     .service(registrations::routes())

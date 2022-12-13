@@ -13,6 +13,7 @@ pub struct AppConfig {
     pub host: String,
     pub port: u16,
     pub database_url: String,
+    pub log_config_file_path: String,
 }
 
 pub type DbPool = Pool<ConnectionManager<PgConnection>>;

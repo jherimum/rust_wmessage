@@ -1,6 +1,7 @@
 use std::fmt::Display;
 
 use actix_web::{http::StatusCode, HttpResponse, ResponseError};
+use bcrypt::BcryptError;
 use config::ConfigError;
 use serde::Serialize;
 use valico::json_schema::SchemaError;
@@ -151,6 +152,16 @@ impl From<diesel::result::Error> for AppError {
 
 impl From<argon2::password_hash::Error> for AppError {
     fn from(err: argon2::password_hash::Error) -> Self {
+        AppError {
+            kind: AppErrorKind::EncryptionError,
+            message: "Encryption Error".to_string(),
+            cause: Some(err.to_string()),
+        }
+    }
+}
+
+impl From<BcryptError> for AppError {
+    fn from(err: BcryptError) -> Self {
         AppError {
             kind: AppErrorKind::EncryptionError,
             message: "Encryption Error".to_string(),

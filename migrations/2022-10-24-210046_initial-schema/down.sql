@@ -5,4 +5,4 @@ drop table channels;
 drop table users;
 drop table passwords;
 drop table workspaces;
-drop table status;
+drop table health;
