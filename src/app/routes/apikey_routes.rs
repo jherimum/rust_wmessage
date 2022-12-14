@@ -6,7 +6,7 @@ use actix_web::{
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 
-use crate::commons::Result;
+use crate::{commons::Result, repository::apikey_repo::ApiKeys};
 use crate::{
     commons::{encrypt::argon::Argon, error::IntoAppError, error::IntoRestError},
     config::DbPool,
@@ -52,7 +52,7 @@ pub async fn create(
 
     let ws = Workspace::find(&mut conn, &ws_id).into_not_found("Worspace not found")?;
     let result = ApiKey::new(ws, &form.name, form.ttl, Argon::default())?;
-    let tuple = (result.0.save(&mut conn)?, result.1);
+    let tuple = (ApiKeys::save(&mut conn, result.0)?, result.1);
 
     Ok(HttpResponse::Ok().json(ApiKeyResponse::from(tuple)))
 }
