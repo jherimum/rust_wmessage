@@ -1,16 +1,15 @@
 use super::message_type::MessageType;
 use crate::commons::Result;
-use crate::schema::message_type_versions::dsl::*;
 use crate::{
-    commons::{error::AppError, json_schema::JsonSchema, uuid::new_uuid},
+    commons::{json_schema::JsonSchema, uuid::new_uuid},
     schema::message_type_versions,
 };
-use diesel::{insert_into, prelude::*};
+use diesel::prelude::*;
 use uuid::Uuid;
 
 #[derive(Identifiable, Insertable, Debug, Clone, PartialEq, Queryable)]
 #[diesel(table_name = message_type_versions)]
-struct MessageTypeVersion {
+pub struct MessageTypeVersion {
     id: Uuid,
     number: i32,
     schema: serde_json::Value,
@@ -37,17 +36,6 @@ impl MessageTypeVersion {
                 message_type_id: *message_type.id(),
             }),
             Err(e) => Err(e),
-        }
-    }
-
-    pub fn save(&self, conn: &mut PgConnection) -> Result<MessageTypeVersion> {
-        match insert_into(message_type_versions)
-            .values(self)
-            .execute(conn)
-        {
-            Ok(1) => Ok(self.clone()),
-            Ok(_) => Err(AppError::model_error(super::ModelErrorKind::EntityNotFound)),
-            Err(err) => Err(AppError::from(err)),
         }
     }
 

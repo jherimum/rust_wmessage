@@ -1,13 +1,11 @@
-use std::collections::HashMap;
-
+use crate::{config::DbPool, plugins::ConnectorPlugins, repository::workspace_repo::Workspaces};
 use actix_web::{
     web::{self, get, post, Data, Json, Path},
     HttpResponse, Responder, Scope,
 };
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use uuid::Uuid;
-
-use crate::{config::DbPool, models::workspace::Workspace, plugins::ConnectorPlugins};
 
 #[derive(Serialize, Deserialize)]
 pub struct ConnectionForm {
@@ -34,7 +32,7 @@ pub async fn create(
     let _form = body.into_inner();
     let ws_id = path.into_inner();
     let mut conn = pool.get().expect("error");
-    let _ws = Workspace::find(&mut conn, &ws_id).expect("msg");
+    let _ws = Workspaces::find(&mut conn, &ws_id).expect("msg");
 
     //let mut conn = pool.get().unwrap();
 

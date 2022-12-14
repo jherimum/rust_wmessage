@@ -3,6 +3,7 @@ use crate::commons::validators::CODE_REGEX;
 use crate::commons::Result;
 use crate::repository::password_repo::Passwords;
 use crate::repository::user_repo::Users;
+use crate::repository::workspace_repo::Workspaces;
 use crate::{
     commons::{encrypt::argon::Argon, error::IntoAppError},
     config::DbPool,
@@ -37,7 +38,8 @@ async fn register(pool: Data<DbPool>, body: Json<RegistrationForm>) -> Result<Ht
     let mut conn = pool.get().into_app_error()?;
 
     conn.transaction(|conn| {
-        let ws = Workspace::new(&form.workspace_code).save(conn)?;
+        let ws = Workspace::new(&form.workspace_code);
+        let ws = Workspaces::save(conn, ws)?;
         let password = Password::new(&form.user_password, &Argon::new())?;
         let password = Passwords::save(conn, password)?;
         let user = User::new(conn, &ws, &form.user_email, &password, true);

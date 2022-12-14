@@ -1,3 +1,12 @@
+use crate::{
+    commons::Result,
+    repository::{apikey_repo::ApiKeys, workspace_repo::Workspaces},
+};
+use crate::{
+    commons::{encrypt::argon::Argon, error::IntoAppError, error::IntoRestError},
+    config::DbPool,
+    models::apikey::ApiKey,
+};
 use actix_web::{
     post,
     web::{self, Data},
@@ -5,13 +14,6 @@ use actix_web::{
 };
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
-
-use crate::{commons::Result, repository::apikey_repo::ApiKeys};
-use crate::{
-    commons::{encrypt::argon::Argon, error::IntoAppError, error::IntoRestError},
-    config::DbPool,
-    models::{apikey::ApiKey, workspace::Workspace},
-};
 use uuid::Uuid;
 
 #[derive(Deserialize, Debug, Clone)]
@@ -50,7 +52,7 @@ pub async fn create(
     let ws_id = path.into_inner();
     let form = body.into_inner();
 
-    let ws = Workspace::find(&mut conn, &ws_id).into_not_found("Worspace not found")?;
+    let ws = Workspaces::find(&mut conn, &ws_id).into_not_found("Worspace not found")?;
     let result = ApiKey::new(ws, &form.name, form.ttl, Argon::default())?;
     let tuple = (ApiKeys::save(&mut conn, result.0)?, result.1);
 

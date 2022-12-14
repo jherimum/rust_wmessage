@@ -1,11 +1,8 @@
 use crate::commons::error::IntoRestError;
 use crate::commons::Result;
 use crate::repository::channel_repo::Channels;
-use crate::{
-    commons::error::IntoAppError,
-    config::DbPool,
-    models::{channel::Channel, workspace::Workspace},
-};
+use crate::repository::workspace_repo::Workspaces;
+use crate::{commons::error::IntoAppError, config::DbPool, models::channel::Channel};
 use actix_web::HttpRequest;
 use actix_web::{
     web::{self, get, patch, post, Data, Json},
@@ -74,7 +71,8 @@ async fn create(
     let form = payload.into_inner();
     let ws_id = path.into_inner();
 
-    let workspace = Workspace::find(&mut conn, &ws_id).into_not_found("Workspace not found")?;
+    let workspace = Workspaces::find(&mut conn, &ws_id).into_not_found("Workspace not found")?;
+
     let channel = Channel::new(
         workspace,
         &form.code,
