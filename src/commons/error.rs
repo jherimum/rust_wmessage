@@ -1,17 +1,20 @@
 use super::rest::RestErrorKind;
+use crate::commons::Result;
 use crate::models::ModelErrorKind;
 use actix_web::{error::UrlGenerationError, http::StatusCode, HttpResponse, ResponseError};
 use config::ConfigError;
 use serde::Serialize;
-use std::fmt::{Display, Error};
+use std::fmt::Display;
 use valico::json_schema::SchemaError;
 
 pub trait IntoRestError<T> {
-    fn into_not_found(self, message: &str) -> Result<T, AppError>;
+    fn into_not_found(self, message: &str) -> Result<T>;
 }
 
-impl<T, E: std::fmt::Debug + Into<AppError>> IntoRestError<T> for Result<Option<T>, E> {
-    fn into_not_found(self, message: &str) -> Result<T, AppError> {
+impl<T, E: std::fmt::Debug + Into<AppError>> IntoRestError<T>
+    for std::result::Result<Option<T>, E>
+{
+    fn into_not_found(self, message: &str) -> Result<T> {
         match self {
             Ok(Some(t)) => Ok(t),
             Ok(None) => Err(AppError {
@@ -27,11 +30,11 @@ impl<T, E: std::fmt::Debug + Into<AppError>> IntoRestError<T> for Result<Option<
 }
 
 pub trait IntoAppError<T> {
-    fn into_app_error(self) -> core::result::Result<T, AppError>;
+    fn into_app_error(self) -> Result<T>;
 }
 
-impl<T, E: std::fmt::Debug + Into<AppError>> IntoAppError<T> for core::result::Result<T, E> {
-    fn into_app_error(self) -> core::result::Result<T, AppError> {
+impl<T, E: std::fmt::Debug + Into<AppError>> IntoAppError<T> for Result<T, E> {
+    fn into_app_error(self) -> Result<T> {
         match self {
             Ok(v) => Ok(v),
             Err(err) => Err(err.into()),

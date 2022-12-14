@@ -1,7 +1,7 @@
+use super::error::AppError;
+use crate::commons::Result;
 use url::Url;
 use valico::json_schema::Scope;
-
-use super::error::AppError;
 
 pub struct JsonSchema {
     scope: Scope,
@@ -9,7 +9,7 @@ pub struct JsonSchema {
 }
 
 impl JsonSchema {
-    pub fn new(raw: &serde_json::Value) -> Result<Self, AppError> {
+    pub fn new(raw: &serde_json::Value) -> Result<Self> {
         let mut scope = Scope::new().supply_defaults();
         match scope.compile(raw.clone(), false) {
             Ok(url) => Ok(JsonSchema { scope, url }),
@@ -17,7 +17,7 @@ impl JsonSchema {
         }
     }
 
-    pub fn validate(&self, payload: &serde_json::Value) -> Result<Vec<String>, AppError> {
+    pub fn validate(&self, payload: &serde_json::Value) -> Result<Vec<String>> {
         let validation = self.scope.resolve(&self.url).unwrap().validate(payload);
 
         let mut errors: Vec<String> = vec![];

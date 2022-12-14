@@ -36,7 +36,7 @@ fn test_ws_creation_when_exists_ws_with_same_code() {
     let code = "code";
     new_workspace(&mut conn, new_uuid(), "code");
 
-    let r: Result<Workspace, AppError> = Workspace::new(code).save(&mut conn);
+    let r: Result<Workspace> = Workspace::new(code).save(&mut conn);
 
     match r {
         Ok(_) => assert!(true),

@@ -1,12 +1,11 @@
+use super::{ConnectorPlugin, DispatchType, DispatcherPlugin, Property};
+use crate::commons::error::AppError;
+use crate::commons::Result;
 use lettre::transport::smtp::authentication::Credentials;
 use lettre::{Message, SmtpTransport, Transport};
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::fmt::Debug;
-
-use crate::commons::error::AppError;
-
-use super::{ConnectorPlugin, DispatchType, DispatcherPlugin, Property};
 
 const MAIL_SMTP_HOST: &str = "mail.smtp.host";
 const MAIL_SMTP_PORT: &str = "mail.smtp.port";
@@ -106,7 +105,7 @@ impl DispatcherPlugin for EmailDispatcher {
         self.properties.clone()
     }
 
-    fn dispatch(&self, req: super::Request) -> Result<super::Response, AppError> {
+    fn dispatch(&self, req: super::Request) -> Result<super::Response> {
         let conn_props: ConnectorProperties = req.connector_props()?;
         let disp_props: DispatcherProprepties = req.dispatcher_props()?;
 

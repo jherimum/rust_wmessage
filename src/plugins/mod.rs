@@ -1,9 +1,8 @@
 pub mod smtp;
-use std::{collections::HashMap, ops::Deref};
-
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
-
 use crate::commons::error::{AppError, IntoAppError};
+use crate::commons::Result;
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use std::{collections::HashMap, ops::Deref};
 
 pub struct ConnectorPlugins {
     plugins: HashMap<String, Box<dyn ConnectorPlugin>>,
@@ -56,7 +55,7 @@ impl Property {
 
 pub trait DispatcherPlugin {
     fn r#type(&self) -> DispatchType;
-    fn dispatch(&self, req: Request) -> Result<Response, AppError>;
+    fn dispatch(&self, req: Request) -> Result<Response>;
     fn properties(&self) -> Vec<Property>;
 }
 
@@ -68,14 +67,14 @@ pub struct Request {
 }
 
 impl Request {
-    fn connector_props<D>(&self) -> Result<D, AppError>
+    fn connector_props<D>(&self) -> Result<D>
     where
         D: for<'a> Deserialize<'a> + DeserializeOwned,
     {
         serde_json::from_value::<D>(self.connector_props.clone()).into_app_error()
     }
 
-    fn dispatcher_props<D>(&self) -> Result<D, AppError>
+    fn dispatcher_props<D>(&self) -> Result<D>
     where
         D: for<'a> Deserialize<'a> + DeserializeOwned,
     {

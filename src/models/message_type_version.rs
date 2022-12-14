@@ -1,14 +1,12 @@
+use super::message_type::MessageType;
+use crate::commons::Result;
+use crate::schema::message_type_versions::dsl::*;
 use crate::{
     commons::{error::AppError, json_schema::JsonSchema, uuid::new_uuid},
     schema::message_type_versions,
 };
 use diesel::{insert_into, prelude::*};
-
 use uuid::Uuid;
-
-use super::message_type::MessageType;
-
-use crate::schema::message_type_versions::dsl::*;
 
 #[derive(Identifiable, Insertable, Debug, Clone, PartialEq, Queryable)]
 #[diesel(table_name = message_type_versions)]
@@ -28,7 +26,7 @@ impl MessageTypeVersion {
         schema_p: serde_json::Value,
         vars_p: serde_json::Value,
         enabled_p: bool,
-    ) -> Result<Self, AppError> {
+    ) -> Result<Self> {
         match JsonSchema::new(&schema_p) {
             Ok(_) => Ok(MessageTypeVersion {
                 id: new_uuid(),
@@ -42,7 +40,7 @@ impl MessageTypeVersion {
         }
     }
 
-    pub fn save(&self, conn: &mut PgConnection) -> Result<MessageTypeVersion, AppError> {
+    pub fn save(&self, conn: &mut PgConnection) -> Result<MessageTypeVersion> {
         match insert_into(message_type_versions)
             .values(self)
             .execute(conn)
@@ -53,7 +51,7 @@ impl MessageTypeVersion {
         }
     }
 
-    pub fn validate(&self, payload: &serde_json::Value) -> Result<Vec<String>, AppError> {
+    pub fn validate(&self, payload: &serde_json::Value) -> Result<Vec<String>> {
         JsonSchema::new(&self.schema)?.validate(payload)
     }
 }

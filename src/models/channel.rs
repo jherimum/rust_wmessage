@@ -1,7 +1,7 @@
 use crate::commons::error::AppError;
 use crate::commons::error::IntoAppError;
 use crate::commons::uuid::new_uuid;
-
+use crate::commons::Result;
 use crate::schema::{self, channels};
 use derive_getters::Getters;
 use diesel::prelude::*;
@@ -41,7 +41,7 @@ impl Channel {
         }
     }
 
-    pub fn exists_code(conn: &mut PgConnection, _code: &str) -> Result<bool, AppError> {
+    pub fn exists_code(conn: &mut PgConnection, _code: &str) -> Result<bool> {
         channels::table
             .filter(dsl::code.eq(_code))
             .count()
@@ -50,7 +50,7 @@ impl Channel {
             .into_app_error()
     }
 
-    pub fn save(self, conn: &mut PgConnection) -> Result<Channel, AppError> {
+    pub fn save(self, conn: &mut PgConnection) -> Result<Channel> {
         if Self::exists_code(conn, &self.code)? {
             return Err(AppError::model_error(
                 crate::models::ModelErrorKind::ChannelCodeAlreadyExists {

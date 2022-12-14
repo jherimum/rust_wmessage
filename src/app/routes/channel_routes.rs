@@ -1,4 +1,5 @@
 use crate::commons::error::IntoRestError;
+use crate::commons::Result;
 use crate::{
     commons::error::{AppError, IntoAppError},
     config::DbPool,
@@ -44,7 +45,7 @@ struct ChannelResponse {
     self_url: Url,
 }
 
-fn to_response(channel: Channel, req: HttpRequest) -> Result<ChannelResponse, AppError> {
+fn to_response(channel: Channel, req: HttpRequest) -> Result<ChannelResponse> {
     Ok(ChannelResponse {
         id: channel.id().clone(),
         code: channel.code().clone(),
@@ -66,7 +67,7 @@ async fn create(
     path: web::Path<uuid::Uuid>,
     payload: Json<ChannelForm>,
     req: HttpRequest,
-) -> Result<HttpResponse, AppError> {
+) -> Result<HttpResponse> {
     let mut conn = pool.get().into_app_error()?;
 
     let form = payload.into_inner();
@@ -84,14 +85,14 @@ async fn create(
     Ok(HttpResponse::Created().json(to_response(channel, req)?))
 }
 
-async fn all() -> Result<HttpResponse, AppError> {
+async fn all() -> Result<HttpResponse> {
     todo!()
 }
 
-async fn find() -> Result<HttpResponse, AppError> {
+async fn find() -> Result<HttpResponse> {
     todo!()
 }
 
-async fn update() -> Result<HttpResponse, AppError> {
+async fn update() -> Result<HttpResponse> {
     todo!()
 }

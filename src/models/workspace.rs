@@ -3,6 +3,7 @@ use super::ModelErrorKind;
 use crate::commons::error::AppError;
 use crate::commons::error::IntoAppError;
 use crate::commons::uuid::new_uuid;
+use crate::commons::Result;
 use crate::schema::workspaces;
 use derive_getters::Getters;
 use diesel::prelude::*;
@@ -25,14 +26,14 @@ impl Workspace {
         }
     }
 
-    pub fn owner(&self, conn: &mut PgConnection) -> Result<User, AppError> {
+    pub fn owner(&self, conn: &mut PgConnection) -> Result<User> {
         match User::ws_owner(conn, self)? {
             Some(u) => Ok(u),
             None => Err(AppError::model_error(super::ModelErrorKind::EntityNotFound)),
         }
     }
 
-    pub fn find(conn: &mut PgConnection, id: &Uuid) -> Result<Option<Workspace>, AppError> {
+    pub fn find(conn: &mut PgConnection, id: &Uuid) -> Result<Option<Workspace>> {
         workspaces::table
             .filter(workspaces::id.eq(id))
             .first::<Workspace>(conn)
@@ -40,7 +41,7 @@ impl Workspace {
             .into_app_error()
     }
 
-    pub fn exists_code(conn: &mut PgConnection, code: &str) -> Result<bool, AppError> {
+    pub fn exists_code(conn: &mut PgConnection, code: &str) -> Result<bool> {
         workspaces::table
             .filter(workspaces::code.eq(code))
             .count()
@@ -49,7 +50,7 @@ impl Workspace {
             .into_app_error()
     }
 
-    pub fn save(self, conn: &mut PgConnection) -> Result<Workspace, AppError> {
+    pub fn save(self, conn: &mut PgConnection) -> Result<Workspace> {
         if Workspace::exists_code(conn, &self.code)? {
             return Err(AppError::model_error(
                 ModelErrorKind::WorkspaceCodeAlreadyExists { code: self.code },

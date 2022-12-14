@@ -1,5 +1,5 @@
-use crate::commons::error::AppError;
 use crate::commons::error::IntoAppError;
+use crate::commons::Result;
 use crate::schema::health::dsl::*;
 use diesel::prelude::*;
 use diesel::PgConnection;
@@ -11,7 +11,7 @@ pub struct Health {
 }
 
 impl Health {
-    pub fn up(conn: &mut PgConnection) -> Result<(), AppError> {
+    pub fn up(conn: &mut PgConnection) -> Result<()> {
         health
             .first::<Health>(conn)
             .optional()

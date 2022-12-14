@@ -1,11 +1,6 @@
-use actix_web::{
-    web::{self, Data, Json},
-    HttpResponse, Scope,
-};
-use diesel::Connection;
-use serde::Deserialize;
-use validator::Validate;
-
+use crate::commons::validators::validate_password;
+use crate::commons::validators::CODE_REGEX;
+use crate::commons::Result;
 use crate::{
     commons::{
         encrypt::argon::Argon,
@@ -14,9 +9,13 @@ use crate::{
     config::DbPool,
     models::{password::Password, user::User, workspace::Workspace},
 };
-
-use crate::commons::validators::validate_password;
-use crate::commons::validators::CODE_REGEX;
+use actix_web::{
+    web::{self, Data, Json},
+    HttpResponse, Scope,
+};
+use diesel::Connection;
+use serde::Deserialize;
+use validator::Validate;
 
 #[derive(Deserialize, Debug, Validate)]
 pub struct RegistrationForm {
@@ -34,10 +33,7 @@ pub fn routes() -> Scope {
     Scope::new("/registrations").service(web::resource("").route(web::post().to(register)))
 }
 
-async fn register(
-    pool: Data<DbPool>,
-    body: Json<RegistrationForm>,
-) -> Result<HttpResponse, AppError> {
+async fn register(pool: Data<DbPool>, body: Json<RegistrationForm>) -> Result<HttpResponse> {
     let form = body.into_inner();
     let mut conn = pool.get().into_app_error()?;
 

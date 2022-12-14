@@ -1,12 +1,11 @@
-use std::time::Duration;
-
+use crate::commons::error::IntoAppError;
+use crate::commons::Result;
 use diesel::{r2d2::ConnectionManager, PgConnection};
 use dotenv::dotenv;
 use log::info;
 use r2d2::Pool;
 use serde::Deserialize;
-
-use crate::commons::error::{AppError, IntoAppError};
+use std::time::Duration;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct AppConfig {
@@ -18,7 +17,7 @@ pub struct AppConfig {
 pub type DbPool = Pool<ConnectionManager<PgConnection>>;
 
 impl AppConfig {
-    pub fn from_env() -> Result<AppConfig, AppError> {
+    pub fn from_env() -> Result<AppConfig> {
         dotenv().ok();
 
         info!("Loading configuration");
@@ -30,7 +29,7 @@ impl AppConfig {
             .into_app_error()
     }
 
-    pub async fn create_pool(&self) -> Result<DbPool, AppError> {
+    pub async fn create_pool(&self) -> Result<DbPool> {
         info!("Creating database pool");
         let manager = ConnectionManager::<PgConnection>::new(self.database_url.to_string());
         Pool::builder()

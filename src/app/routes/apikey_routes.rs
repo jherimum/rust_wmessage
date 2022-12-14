@@ -6,6 +6,7 @@ use actix_web::{
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 
+use crate::commons::Result;
 use crate::{
     commons::{
         encrypt::argon::Argon,
@@ -47,7 +48,7 @@ pub async fn create(
     pool: Data<DbPool>,
     body: web::Json<ApiKeyForm>,
     path: web::Path<Uuid>,
-) -> Result<HttpResponse, AppError> {
+) -> Result<HttpResponse> {
     let mut conn = pool.get().into_app_error()?;
 
     let ws_id = path.into_inner();

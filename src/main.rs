@@ -7,15 +7,13 @@ use wmessage::app::routes::health_routes::{self};
 use wmessage::app::routes::registration_routes::{self};
 use wmessage::app::routes::{apikey_routes, channel_routes};
 use wmessage::app::routes::{connection_routes, plugin_routes};
-use wmessage::commons::error::AppError;
 use wmessage::commons::error::IntoAppError;
+use wmessage::commons::Result;
 use wmessage::config::AppConfig;
 use wmessage::plugins::{smtp, ConnectorPlugins};
 
-extern crate lazy_static;
-
 #[actix_web::main]
-async fn main() -> Result<(), AppError> {
+async fn main() -> Result<()> {
     let config = AppConfig::from_env()?;
     let pool = config.create_pool().await?;
     let smtp_plugin = smtp::StmpPlugin::new();

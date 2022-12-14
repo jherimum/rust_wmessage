@@ -2,6 +2,7 @@ use super::password::Password;
 use super::workspace::Workspace;
 use crate::commons::error::{AppError, IntoAppError};
 use crate::commons::uuid::new_uuid;
+use crate::commons::Result;
 use crate::schema::users;
 use derive_getters::Getters;
 use diesel::prelude::*;
@@ -19,7 +20,7 @@ pub struct User {
 }
 
 impl User {
-    pub fn ws_owner(conn: &mut PgConnection, ws: &Workspace) -> Result<Option<User>, AppError> {
+    pub fn ws_owner(conn: &mut PgConnection, ws: &Workspace) -> Result<Option<User>> {
         users::table
             .filter(users::workspace_id.eq(&ws.id()).and(users::owner.eq(true)))
             .first::<User>(conn)
@@ -27,7 +28,7 @@ impl User {
             .into_app_error()
     }
 
-    pub fn password(&self, conn: &mut PgConnection) -> Result<Password, AppError> {
+    pub fn password(&self, conn: &mut PgConnection) -> Result<Password> {
         let r = Password::find(conn, self.password_id)?;
         match r {
             Some(p) => Ok(p),
@@ -35,7 +36,7 @@ impl User {
         }
     }
 
-    pub fn save(self, conn: &mut PgConnection) -> Result<User, AppError> {
+    pub fn save(self, conn: &mut PgConnection) -> Result<User> {
         match insert_into(users::table).values(&self).execute(conn) {
             Ok(_) => Ok(self),
             Err(_) => Err(AppError::database_error("password not inserted")),
