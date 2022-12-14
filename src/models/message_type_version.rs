@@ -48,11 +48,7 @@ impl MessageTypeVersion {
             .execute(conn)
         {
             Ok(1) => Ok(self.clone()),
-            Ok(_) => Err(AppError::model_error(
-                super::ModelErrorKind::EntityNotFound {
-                    message: "message type version not inserted".to_string(),
-                },
-            )),
+            Ok(_) => Err(AppError::model_error(super::ModelErrorKind::EntityNotFound)),
             Err(err) => Err(AppError::from(err)),
         }
     }

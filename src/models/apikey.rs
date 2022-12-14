@@ -53,11 +53,7 @@ impl ApiKey {
     pub fn workspace(&self, conn: &mut PgConnection) -> Result<Workspace, AppError> {
         match Workspace::find(conn, &self.workspace_id)? {
             Some(ws) => Ok(ws),
-            None => Err(AppError::model_error(
-                super::ModelErrorKind::EntityNotFound {
-                    message: "Worspace not found".to_string(),
-                },
-            )),
+            None => Err(AppError::model_error(super::ModelErrorKind::EntityNotFound)),
         }
     }
 }

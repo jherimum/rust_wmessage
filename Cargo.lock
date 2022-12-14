@@ -2658,6 +2658,7 @@ dependencies = [
  "regex",
  "serde",
  "serde_json",
+ "thiserror",
  "url",
  "uuid 1.2.2",
  "valico",

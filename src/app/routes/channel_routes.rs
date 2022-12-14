@@ -1,20 +1,22 @@
+use crate::commons::error::IntoRestError;
+use crate::{
+    commons::error::{AppError, IntoAppError},
+    config::DbPool,
+    models::{channel::Channel, workspace::Workspace},
+};
+use actix_web::HttpRequest;
 use actix_web::{
     web::{self, get, patch, post, Data, Json},
     HttpResponse, Scope,
 };
 use serde::{Deserialize, Serialize};
-
-use super::find_workspace;
-use crate::{
-    commons::error::{AppError, IntoAppError},
-    config::DbPool,
-    models::channel::Channel,
-};
+use url::Url;
 
 pub fn routes() -> Scope {
     let channels = web::resource("")
         .route(post().to(create))
-        .route(get().to(all));
+        .route(get().to(all))
+        .name("channel");
     let channel = web::resource("/{channel_id}")
         .route(get().to(find))
         .route(patch().to(update));
@@ -39,13 +41,31 @@ struct ChannelResponse {
     description: String,
     vars: serde_json::Value,
     enabled: bool,
-    ws_url: url::Url,
+    self_url: Url,
+}
+
+fn to_response(channel: Channel, req: HttpRequest) -> Result<ChannelResponse, AppError> {
+    Ok(ChannelResponse {
+        id: channel.id().clone(),
+        code: channel.code().clone(),
+        description: channel.description().clone(),
+        vars: channel.vars().clone(),
+        enabled: channel.enabled().clone(),
+        self_url: req.url_for(
+            "channel",
+            &[
+                channel.workspace_id().to_string(),
+                channel.id().clone().to_string(),
+            ],
+        )?,
+    })
 }
 
 async fn create(
     pool: Data<DbPool>,
     path: web::Path<uuid::Uuid>,
     payload: Json<ChannelForm>,
+    req: HttpRequest,
 ) -> Result<HttpResponse, AppError> {
     let mut conn = pool.get().into_app_error()?;
 
@@ -53,7 +73,7 @@ async fn create(
     let ws_id = path.into_inner();
 
     let channel = Channel::new(
-        find_workspace(&mut conn, ws_id)?,
+        Workspace::find(&mut conn, &ws_id).into_not_found("Workspace not found")?,
         &form.code,
         &form.description,
         form.vars,
@@ -61,7 +81,7 @@ async fn create(
     )
     .save(&mut conn)?;
 
-    Ok(HttpResponse::Ok().finish())
+    Ok(HttpResponse::Created().json(to_response(channel, req)?))
 }
 
 async fn all() -> Result<HttpResponse, AppError> {

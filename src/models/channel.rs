@@ -3,6 +3,7 @@ use crate::commons::error::IntoAppError;
 use crate::commons::uuid::new_uuid;
 
 use crate::schema::{self, channels};
+use derive_getters::Getters;
 use diesel::prelude::*;
 use diesel::{insert_into, PgConnection};
 use schema::channels::dsl;
@@ -11,7 +12,7 @@ use uuid::Uuid;
 
 use super::workspace::Workspace;
 
-#[derive(Insertable, Identifiable, Debug, Clone, PartialEq, Queryable, Eq)]
+#[derive(Insertable, Identifiable, Debug, Clone, PartialEq, Queryable, Eq, Getters)]
 #[diesel(table_name = channels)]
 pub struct Channel {
     id: Uuid,

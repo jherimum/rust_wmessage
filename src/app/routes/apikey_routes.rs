@@ -7,13 +7,13 @@ use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    app::routes::find_workspace,
     commons::{
         encrypt::argon::Argon,
+        error::IntoRestError,
         error::{AppError, IntoAppError},
     },
     config::DbPool,
-    models::apikey::ApiKey,
+    models::{apikey::ApiKey, workspace::Workspace},
 };
 use uuid::Uuid;
 
@@ -53,7 +53,7 @@ pub async fn create(
     let ws_id = path.into_inner();
     let form = body.into_inner();
 
-    let ws = find_workspace(&mut conn, ws_id)?;
+    let ws = Workspace::find(&mut conn, &ws_id).into_not_found("Worspace not found")?;
     let result = ApiKey::new(ws, &form.name, form.ttl, Argon::default())?;
     let tuple = (result.0.save(&mut conn)?, result.1);
 

@@ -55,7 +55,7 @@ mod tests {
 
     mod registration_form {
 
-        use crate::app::routes::registrations::RegistrationForm;
+        use crate::app::routes::registration_routes::RegistrationForm;
         use validator::Validate;
 
         #[test]

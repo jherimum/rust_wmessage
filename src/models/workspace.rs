@@ -1,4 +1,5 @@
 use super::user::User;
+use super::ModelErrorKind;
 use crate::commons::error::AppError;
 use crate::commons::error::IntoAppError;
 use crate::commons::uuid::new_uuid;
@@ -27,11 +28,7 @@ impl Workspace {
     pub fn owner(&self, conn: &mut PgConnection) -> Result<User, AppError> {
         match User::ws_owner(conn, self)? {
             Some(u) => Ok(u),
-            None => Err(AppError::model_error(
-                super::ModelErrorKind::EntityNotFound {
-                    message: "owner not found".to_string(),
-                },
-            )),
+            None => Err(AppError::model_error(super::ModelErrorKind::EntityNotFound)),
         }
     }
 
@@ -55,9 +52,7 @@ impl Workspace {
     pub fn save(self, conn: &mut PgConnection) -> Result<Workspace, AppError> {
         if Workspace::exists_code(conn, &self.code)? {
             return Err(AppError::model_error(
-                crate::models::ModelErrorKind::WorkspaceCodeAlreadyExists {
-                    code: self.code.clone(),
-                },
+                ModelErrorKind::WorkspaceCodeAlreadyExists { code: self.code },
             ));
         }
 

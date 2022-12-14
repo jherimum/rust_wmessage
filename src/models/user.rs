@@ -31,11 +31,7 @@ impl User {
         let r = Password::find(conn, self.password_id)?;
         match r {
             Some(p) => Ok(p),
-            None => Err(AppError::model_error(
-                super::ModelErrorKind::EntityNotFound {
-                    message: "Password not found".to_string(),
-                },
-            )),
+            None => Err(AppError::model_error(super::ModelErrorKind::EntityNotFound)),
         }
     }
 

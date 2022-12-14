@@ -7,17 +7,16 @@ pub mod password;
 pub mod user;
 pub mod workspace;
 
-use std::fmt::Display;
+use thiserror::Error;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Error)]
 pub enum ModelErrorKind {
-    EntityNotFound { message: String },
-    WorkspaceCodeAlreadyExists { code: String },
-    ChannelCodeAlreadyExists { code: String },
-}
+    #[error("Entity not found")]
+    EntityNotFound,
 
-impl Display for ModelErrorKind {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", 11111)
-    }
+    #[error("Workspace with code {code} already exists")]
+    WorkspaceCodeAlreadyExists { code: String },
+
+    #[error("channel with code {code} already exists")]
+    ChannelCodeAlreadyExists { code: String },
 }

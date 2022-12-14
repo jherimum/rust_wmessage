@@ -1,10 +1,30 @@
 use super::rest::RestErrorKind;
 use crate::models::ModelErrorKind;
-use actix_web::{http::StatusCode, HttpResponse, ResponseError};
+use actix_web::{error::UrlGenerationError, http::StatusCode, HttpResponse, ResponseError};
 use config::ConfigError;
 use serde::Serialize;
-use std::fmt::Display;
+use std::fmt::{Display, Error};
 use valico::json_schema::SchemaError;
+
+pub trait IntoRestError<T> {
+    fn into_not_found(self, message: &str) -> Result<T, AppError>;
+}
+
+impl<T, E: std::fmt::Debug + Into<AppError>> IntoRestError<T> for Result<Option<T>, E> {
+    fn into_not_found(self, message: &str) -> Result<T, AppError> {
+        match self {
+            Ok(Some(t)) => Ok(t),
+            Ok(None) => Err(AppError {
+                kind: crate::commons::error::AppErrorKind::RestError(
+                    crate::commons::rest::RestErrorKind::NotFound,
+                ),
+                message: message.to_string(),
+                cause: None,
+            }),
+            Err(e) => Err(e.into()),
+        }
+    }
+}
 
 pub trait IntoAppError<T> {
     fn into_app_error(self) -> core::result::Result<T, AppError>;
@@ -31,6 +51,7 @@ pub enum AppErrorKind {
     JsonSchemaError,
     JsonError,
     PluginError,
+    UnexpectedError,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -54,18 +75,37 @@ impl From<AppError> for AppErrorResponse {
 }
 
 impl AppError {
+    pub fn new(kind: AppErrorKind, mesage: &str, cause: Option<&str>) -> Self {
+        AppError {
+            kind: kind,
+            message: mesage.to_string(),
+            cause: cause.map(String::from),
+        }
+    }
+
+    pub fn io_error(mesage: &str, cause: Option<&str>) -> Self {
+        Self::new(AppErrorKind::IOError, mesage, cause)
+    }
+
+    pub fn pool_error(mesage: &str, cause: Option<&str>) -> Self {
+        Self::new(AppErrorKind::PoolError, mesage, cause)
+    }
+
+    pub fn db_error(mesage: &str, cause: Option<&str>) -> Self {
+        Self::new(AppErrorKind::DatabaseError, mesage, cause)
+    }
+
+    pub fn model_error(kind: ModelErrorKind) -> Self {
+        Self::new(
+            AppErrorKind::ModelError(kind.clone()),
+            &kind.clone().to_string(),
+            None,
+        )
+    }
     pub fn not_found(message: &str) -> AppError {
         AppError {
             kind: AppErrorKind::RestError(RestErrorKind::NotFound),
             message: message.to_string(),
-            cause: None,
-        }
-    }
-
-    pub fn model_error(kind: ModelErrorKind) -> Self {
-        AppError {
-            kind: AppErrorKind::ModelError(kind.clone()),
-            message: kind.to_string(),
             cause: None,
         }
     }
@@ -119,11 +159,7 @@ impl From<ConfigError> for AppError {
 
 impl From<std::io::Error> for AppError {
     fn from(err: std::io::Error) -> Self {
-        AppError {
-            kind: AppErrorKind::IOError,
-            message: "Io error".to_string(),
-            cause: Some(err.to_string()),
-        }
+        AppError::io_error("Io error", Some(&err.to_string()))
     }
 }
 
@@ -182,6 +218,16 @@ impl From<argon2::password_hash::Error> for AppError {
         AppError {
             kind: AppErrorKind::EncryptionError,
             message: "Encryption Error".to_string(),
+            cause: Some(err.to_string()),
+        }
+    }
+}
+
+impl From<UrlGenerationError> for AppError {
+    fn from(err: UrlGenerationError) -> Self {
+        AppError {
+            kind: AppErrorKind::UnexpectedError,
+            message: "Not expected error".to_string(),
             cause: Some(err.to_string()),
         }
     }
