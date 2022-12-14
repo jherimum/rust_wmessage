@@ -1,9 +1,6 @@
-use wmessage::{
-    commons::{error::AppError, uuid::new_uuid},
-    models::workspace::Workspace,
-};
-
 use crate::{common::seed::new_workspace, models::build_context};
+use wmessage::commons::Result;
+use wmessage::{commons::uuid::new_uuid, models::workspace::Workspace};
 
 #[test]
 fn test_find_ws_when_do_not_exists() {
