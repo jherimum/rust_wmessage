@@ -7,7 +7,10 @@ use serde::Deserialize;
 use validator::Validate;
 
 use crate::{
-    commons::{encrypt::argon::Argon, error::AppError},
+    commons::{
+        encrypt::argon::Argon,
+        error::{AppError, IntoAppError},
+    },
     config::DbPool,
     models::{password::Password, user::User, workspace::Workspace},
 };
@@ -36,7 +39,7 @@ async fn register(
     body: Json<RegistrationForm>,
 ) -> Result<HttpResponse, AppError> {
     let form = body.into_inner();
-    let mut conn = pool.get().map_err(AppError::from)?;
+    let mut conn = pool.get().into_app_error()?;
 
     conn.transaction(|conn| {
         let ws = Workspace::new(&form.workspace_code).save(conn)?;

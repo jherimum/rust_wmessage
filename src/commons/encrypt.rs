@@ -13,7 +13,7 @@ pub mod argon {
     };
     use rand::rngs::OsRng;
 
-    use crate::commons::error::AppError;
+    use crate::commons::error::{AppError, IntoAppError};
 
     use super::Encrypter;
 
@@ -25,11 +25,11 @@ pub mod argon {
             self.0
                 .hash_password(clear_password.as_bytes(), &salt)
                 .map(|ph| ph.to_string())
-                .map_err(AppError::from)
+                .into_app_error()
         }
 
         fn verify(&self, clear_password: &str, hash: &str) -> Result<bool, AppError> {
-            let password_hash = PasswordHash::new(hash).map_err(AppError::from)?;
+            let password_hash = PasswordHash::new(hash).into_app_error()?;
             match self
                 .0
                 .verify_password(clear_password.as_bytes(), &password_hash)

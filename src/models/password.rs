@@ -1,5 +1,6 @@
 use crate::commons::encrypt::Encrypter;
 use crate::commons::error::AppError;
+use crate::commons::error::IntoAppError;
 use crate::commons::uuid::new_uuid;
 use crate::schema::passwords;
 use derive_getters::Getters;
@@ -43,7 +44,7 @@ impl Password {
             .filter(passwords::id.eq(id))
             .first::<Password>(conn)
             .optional()
-            .map_err(AppError::from)
+            .into_app_error()
     }
 
     pub fn authenticate(

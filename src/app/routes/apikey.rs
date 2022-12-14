@@ -8,7 +8,10 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     app::routes::find_workspace,
-    commons::{encrypt::argon::Argon, error::AppError},
+    commons::{
+        encrypt::argon::Argon,
+        error::{AppError, IntoAppError},
+    },
     config::DbPool,
     models::apikey::ApiKey,
 };
@@ -45,7 +48,7 @@ pub async fn create(
     body: web::Json<ApiKeyForm>,
     path: web::Path<Uuid>,
 ) -> Result<HttpResponse, AppError> {
-    let mut conn = pool.get().map_err(AppError::from)?;
+    let mut conn = pool.get().into_app_error()?;
 
     let ws_id = path.into_inner();
     let form = body.into_inner();

@@ -1,4 +1,5 @@
 use crate::commons::error::AppError;
+use crate::commons::error::IntoAppError;
 use crate::commons::uuid::new_uuid;
 
 use crate::schema::{self, channels};
@@ -45,7 +46,7 @@ impl Channel {
             .count()
             .get_result::<i64>(conn)
             .map(|count| count > 0)
-            .map_err(AppError::from)
+            .into_app_error()
     }
 
     pub fn save(self, conn: &mut PgConnection) -> Result<Channel, AppError> {

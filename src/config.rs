@@ -6,7 +6,7 @@ use log::info;
 use r2d2::Pool;
 use serde::Deserialize;
 
-use crate::commons::error::AppError;
+use crate::commons::error::{AppError, IntoAppError};
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct AppConfig {
@@ -25,9 +25,9 @@ impl AppConfig {
         config::Config::builder()
             .add_source(config::Environment::default())
             .build()
-            .map_err(AppError::from)?
+            .into_app_error()?
             .try_deserialize::<AppConfig>()
-            .map_err(AppError::from)
+            .into_app_error()
     }
 
     pub async fn create_pool(&self) -> Result<DbPool, AppError> {
@@ -36,6 +36,6 @@ impl AppConfig {
         Pool::builder()
             .connection_timeout(Duration::from_secs(10))
             .build(manager)
-            .map_err(AppError::from)
+            .into_app_error()
     }
 }

@@ -1,5 +1,6 @@
 use super::user::User;
 use crate::commons::error::AppError;
+use crate::commons::error::IntoAppError;
 use crate::commons::uuid::new_uuid;
 use crate::schema::workspaces;
 use derive_getters::Getters;
@@ -39,7 +40,7 @@ impl Workspace {
             .filter(workspaces::id.eq(id))
             .first::<Workspace>(conn)
             .optional()
-            .map_err(AppError::from)
+            .into_app_error()
     }
 
     pub fn exists_code(conn: &mut PgConnection, code: &str) -> Result<bool, AppError> {
@@ -48,7 +49,7 @@ impl Workspace {
             .count()
             .get_result::<i64>(conn)
             .map(|count| count > 0)
-            .map_err(AppError::from)
+            .into_app_error()
     }
 
     pub fn save(self, conn: &mut PgConnection) -> Result<Workspace, AppError> {

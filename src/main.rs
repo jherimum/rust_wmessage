@@ -8,6 +8,7 @@ use wmessage::app::routes::registrations::{self};
 use wmessage::app::routes::{apikey, channels};
 use wmessage::app::routes::{connections, plugins};
 use wmessage::commons::error::AppError;
+use wmessage::commons::error::IntoAppError;
 use wmessage::config::AppConfig;
 use wmessage::plugins::{smtp, ConnectorPlugins};
 
@@ -41,7 +42,7 @@ async fn main() -> Result<(), AppError> {
             )
     })
     .bind((config.host, config.port))
-    .map_err(AppError::from)?
+    .into_app_error()?
     .run()
     .await?;
 

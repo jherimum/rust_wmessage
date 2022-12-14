@@ -3,7 +3,7 @@ use std::{collections::HashMap, ops::Deref};
 
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
-use crate::commons::error::AppError;
+use crate::commons::error::{AppError, IntoAppError};
 
 pub struct ConnectorPlugins {
     plugins: HashMap<String, Box<dyn ConnectorPlugin>>,
@@ -72,14 +72,14 @@ impl Request {
     where
         D: for<'a> Deserialize<'a> + DeserializeOwned,
     {
-        serde_json::from_value::<D>(self.connector_props.clone()).map_err(AppError::from)
+        serde_json::from_value::<D>(self.connector_props.clone()).into_app_error()
     }
 
     fn dispatcher_props<D>(&self) -> Result<D, AppError>
     where
         D: for<'a> Deserialize<'a> + DeserializeOwned,
     {
-        serde_json::from_value::<D>(self.dispatcher_props.clone()).map_err(AppError::from)
+        serde_json::from_value::<D>(self.dispatcher_props.clone()).into_app_error()
     }
 }
 

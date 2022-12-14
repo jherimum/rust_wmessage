@@ -5,7 +5,11 @@ use actix_web::{
 use serde::{Deserialize, Serialize};
 
 use super::find_workspace;
-use crate::{commons::error::AppError, config::DbPool, models::channel::Channel};
+use crate::{
+    commons::error::{AppError, IntoAppError},
+    config::DbPool,
+    models::channel::Channel,
+};
 
 pub fn routes() -> Scope {
     let channels = web::resource("")
@@ -43,7 +47,7 @@ async fn create(
     path: web::Path<uuid::Uuid>,
     payload: Json<ChannelForm>,
 ) -> Result<HttpResponse, AppError> {
-    let mut conn = pool.get().map_err(AppError::from)?;
+    let mut conn = pool.get().into_app_error()?;
 
     let form = payload.into_inner();
     let ws_id = path.into_inner();

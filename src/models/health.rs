@@ -1,4 +1,5 @@
 use crate::commons::error::AppError;
+use crate::commons::error::IntoAppError;
 use crate::schema::health::dsl::*;
 use diesel::prelude::*;
 use diesel::PgConnection;
@@ -15,6 +16,6 @@ impl Health {
             .first::<Health>(conn)
             .optional()
             .map(|_| ())
-            .map_err(AppError::from)
+            .into_app_error()
     }
 }

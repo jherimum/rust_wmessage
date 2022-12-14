@@ -1,14 +1,23 @@
-use std::fmt::Display;
-
+use super::rest::RestErrorKind;
+use crate::models::ModelErrorKind;
 use actix_web::{http::StatusCode, HttpResponse, ResponseError};
 use config::ConfigError;
 use serde::Serialize;
-use thiserror::Error;
+use std::fmt::Display;
 use valico::json_schema::SchemaError;
 
-use crate::models::ModelErrorKind;
+pub trait IntoAppError<T> {
+    fn into_app_error(self) -> core::result::Result<T, AppError>;
+}
 
-use super::rest::RestErrorKind;
+impl<T, E: std::fmt::Debug + Into<AppError>> IntoAppError<T> for core::result::Result<T, E> {
+    fn into_app_error(self) -> core::result::Result<T, AppError> {
+        match self {
+            Ok(v) => Ok(v),
+            Err(err) => Err(err.into()),
+        }
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AppErrorKind {
@@ -24,7 +33,7 @@ pub enum AppErrorKind {
     PluginError,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Error)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AppError {
     kind: AppErrorKind,
     message: String,

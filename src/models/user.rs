@@ -1,6 +1,6 @@
 use super::password::Password;
 use super::workspace::Workspace;
-use crate::commons::error::AppError;
+use crate::commons::error::{AppError, IntoAppError};
 use crate::commons::uuid::new_uuid;
 use crate::schema::users;
 use derive_getters::Getters;
@@ -24,7 +24,7 @@ impl User {
             .filter(users::workspace_id.eq(&ws.id()).and(users::owner.eq(true)))
             .first::<User>(conn)
             .optional()
-            .map_err(AppError::from)
+            .into_app_error()
     }
 
     pub fn password(&self, conn: &mut PgConnection) -> Result<Password, AppError> {
