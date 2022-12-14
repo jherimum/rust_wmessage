@@ -1,11 +1,10 @@
 use crate::commons::validators::validate_password;
 use crate::commons::validators::CODE_REGEX;
 use crate::commons::Result;
+use crate::repository::password_repo::Passwords;
+use crate::repository::user_repo::Users;
 use crate::{
-    commons::{
-        encrypt::argon::Argon,
-        error::{AppError, IntoAppError},
-    },
+    commons::{encrypt::argon::Argon, error::IntoAppError},
     config::DbPool,
     models::{password::Password, user::User, workspace::Workspace},
 };
@@ -39,8 +38,10 @@ async fn register(pool: Data<DbPool>, body: Json<RegistrationForm>) -> Result<Ht
 
     conn.transaction(|conn| {
         let ws = Workspace::new(&form.workspace_code).save(conn)?;
-        let password = Password::new(&form.user_password, &Argon::new())?.save(conn)?;
-        let _user = User::new(conn, &ws, &form.user_email, &password, true).save(conn)?;
+        let password = Password::new(&form.user_password, &Argon::new())?;
+        let password = Passwords::save(conn, password)?;
+        let user = User::new(conn, &ws, &form.user_email, &password, true);
+        let user = Users::save(conn, user);
         Ok(())
     })
     .map(|()| HttpResponse::Ok().finish())

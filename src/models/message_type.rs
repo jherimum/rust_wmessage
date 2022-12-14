@@ -1,4 +1,3 @@
-use crate::commons::Result;
 use crate::schema::message_types;
 use diesel::prelude::*;
 use uuid::Uuid;

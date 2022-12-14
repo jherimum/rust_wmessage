@@ -1,4 +1,3 @@
-use super::user::User;
 use super::ModelErrorKind;
 use crate::commons::error::AppError;
 use crate::commons::error::IntoAppError;
@@ -23,13 +22,6 @@ impl Workspace {
         Workspace {
             id: new_uuid(),
             code: code.to_string(),
-        }
-    }
-
-    pub fn owner(&self, conn: &mut PgConnection) -> Result<User> {
-        match User::ws_owner(conn, self)? {
-            Some(u) => Ok(u),
-            None => Err(AppError::model_error(super::ModelErrorKind::EntityNotFound)),
         }
     }
 

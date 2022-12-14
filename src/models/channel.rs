@@ -1,16 +1,9 @@
-use crate::commons::error::AppError;
-use crate::commons::error::IntoAppError;
-use crate::commons::uuid::new_uuid;
-use crate::commons::Result;
-use crate::schema::{self, channels};
+use super::workspace::Workspace;
+use crate::{commons::mock_uuid::new_uuid, schema::channels};
 use derive_getters::Getters;
 use diesel::prelude::*;
-use diesel::{insert_into, PgConnection};
-use schema::channels::dsl;
 use serde_json::Value;
 use uuid::Uuid;
-
-use super::workspace::Workspace;
 
 #[derive(Insertable, Identifiable, Debug, Clone, PartialEq, Queryable, Eq, Getters)]
 #[diesel(table_name = channels)]
@@ -38,31 +31,6 @@ impl Channel {
             vars: vars,
             description: description.to_string(),
             enabled: enabled,
-        }
-    }
-
-    pub fn exists_code(conn: &mut PgConnection, _code: &str) -> Result<bool> {
-        channels::table
-            .filter(dsl::code.eq(_code))
-            .count()
-            .get_result::<i64>(conn)
-            .map(|count| count > 0)
-            .into_app_error()
-    }
-
-    pub fn save(self, conn: &mut PgConnection) -> Result<Channel> {
-        if Self::exists_code(conn, &self.code)? {
-            return Err(AppError::model_error(
-                crate::models::ModelErrorKind::ChannelCodeAlreadyExists {
-                    code: self.code.clone(),
-                },
-            ));
-        }
-
-        match insert_into(dsl::channels).values(&self).execute(conn) {
-            Ok(1) => Ok(self),
-            Ok(_) => Err(AppError::database_error("channel not inserted")),
-            Err(err) => Err(AppError::from(err)),
         }
     }
 }

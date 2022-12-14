@@ -8,11 +8,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::commons::Result;
 use crate::{
-    commons::{
-        encrypt::argon::Argon,
-        error::IntoRestError,
-        error::{AppError, IntoAppError},
-    },
+    commons::{encrypt::argon::Argon, error::IntoAppError, error::IntoRestError},
     config::DbPool,
     models::{apikey::ApiKey, workspace::Workspace},
 };

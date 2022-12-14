@@ -1,7 +1,8 @@
 use crate::commons::error::IntoRestError;
 use crate::commons::Result;
+use crate::repository::channel_repo::Channels;
 use crate::{
-    commons::error::{AppError, IntoAppError},
+    commons::error::IntoAppError,
     config::DbPool,
     models::{channel::Channel, workspace::Workspace},
 };
@@ -73,14 +74,15 @@ async fn create(
     let form = payload.into_inner();
     let ws_id = path.into_inner();
 
+    let workspace = Workspace::find(&mut conn, &ws_id).into_not_found("Workspace not found")?;
     let channel = Channel::new(
-        Workspace::find(&mut conn, &ws_id).into_not_found("Workspace not found")?,
+        workspace,
         &form.code,
         &form.description,
         form.vars,
         form.enabled,
-    )
-    .save(&mut conn)?;
+    );
+    let channel = Channels::save(&mut conn, channel)?;
 
     Ok(HttpResponse::Created().json(to_response(channel, req)?))
 }

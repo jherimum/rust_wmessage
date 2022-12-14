@@ -1,5 +1,5 @@
 pub mod smtp;
-use crate::commons::error::{AppError, IntoAppError};
+use crate::commons::error::IntoAppError;
 use crate::commons::Result;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{collections::HashMap, ops::Deref};

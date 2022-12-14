@@ -1,12 +1,9 @@
 use crate::commons::encrypt::Encrypter;
-use crate::commons::error::AppError;
-use crate::commons::error::IntoAppError;
-use crate::commons::uuid::new_uuid;
+use crate::commons::mock_uuid::new_uuid;
 use crate::commons::Result;
 use crate::schema::passwords;
 use derive_getters::Getters;
 use diesel::prelude::*;
-use diesel::{insert_into, PgConnection};
 use uuid::Uuid;
 
 #[derive(Insertable, Queryable, Identifiable, Debug, Clone, PartialEq, Eq, Getters)]
@@ -30,22 +27,6 @@ impl Password {
 
     pub fn new(plain_password: &str, encrypter: &dyn Encrypter) -> Result<Password> {
         Self::new_with_id(new_uuid(), plain_password, encrypter)
-    }
-
-    pub fn save(self, conn: &mut PgConnection) -> Result<Password> {
-        match insert_into(passwords::table).values(&self).execute(conn) {
-            Ok(1) => Ok(self),
-            Ok(_) => Err(AppError::database_error("password not inserted")),
-            Err(err) => Err(AppError::from(err)),
-        }
-    }
-
-    pub fn find(conn: &mut PgConnection, id: Uuid) -> Result<Option<Password>> {
-        passwords::table
-            .filter(passwords::id.eq(id))
-            .first::<Password>(conn)
-            .optional()
-            .into_app_error()
     }
 
     pub fn authenticate(&self, plain_password: &str, encrypter: &dyn Encrypter) -> Result<bool> {
