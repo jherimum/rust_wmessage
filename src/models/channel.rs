@@ -1,5 +1,5 @@
 use super::workspace::Workspace;
-use crate::{commons::mock_uuid::new_uuid, schema::channels};
+use crate::{commons::uuid::new_uuid, schema::channels};
 use derive_getters::Getters;
 use diesel::prelude::*;
 use serde_json::Value;

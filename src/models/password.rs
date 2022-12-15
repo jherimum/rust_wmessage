@@ -1,5 +1,5 @@
 use crate::commons::encrypt::Encrypter;
-use crate::commons::mock_uuid::new_uuid;
+use crate::commons::uuid::new_uuid;
 use crate::commons::Result;
 use crate::schema::passwords;
 use derive_getters::Getters;
