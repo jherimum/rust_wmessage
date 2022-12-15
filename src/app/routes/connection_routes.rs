@@ -1,4 +1,6 @@
-use crate::{config::DbPool, plugins::ConnectorPlugins, repository::workspace_repo::Workspaces};
+use crate::{
+    commons::database::DbPool, plugins::ConnectorPlugins, repository::workspace_repo::Workspaces,
+};
 use actix_web::{
     web::{self, get, post, Data, Json, Path},
     HttpResponse, Responder, Scope,

@@ -1,20 +1,11 @@
 use crate::commons::validators::validate_password;
 use crate::commons::validators::CODE_REGEX;
 use crate::commons::Result;
-use crate::repository::password_repo::Passwords;
-use crate::repository::user_repo::Users;
-use crate::repository::workspace_repo::Workspaces;
-use crate::{
-    commons::{encrypt::argon::Argon, error::IntoAppError},
-    config::DbPool,
-    models::{password::Password, user::User, workspace::Workspace},
-};
+use crate::service::RegistrationService;
 use actix_web::{
-    web::{self, Data, Json},
+    web::{self, Json},
     HttpResponse, Scope,
 };
-use diesel::Connection;
-use diesel::PgConnection;
 use serde::Deserialize;
 use validator::Validate;
 
@@ -34,37 +25,13 @@ pub fn routes() -> Scope {
     Scope::new("/registrations").service(web::resource("").route(web::post().to(register)))
 }
 
-async fn register(pool: Data<DbPool>, body: Json<RegistrationForm>) -> Result<HttpResponse> {
-    let form = body.into_inner();
-    let mut conn = pool.get().into_app_error()?;
-
-    conn.transaction(|conn| {
-        let ws = create_ws(conn, form.workspace_code)?;
-        let password = create_pass(conn, form.user_password)?;
-        create_user(conn, ws, password, form.user_email)?;
-        Ok(())
-    })
-    .map(|()| HttpResponse::Ok().finish())
-}
-
-fn create_user(
-    conn: &mut PgConnection,
-    ws: Workspace,
-    pass: Password,
-    email: String,
-) -> Result<User> {
-    let user = User::new(conn, ws, &email, pass, true);
-    Users::save(conn, user)
-}
-
-fn create_ws(conn: &mut PgConnection, code: String) -> Result<Workspace> {
-    let ws = Workspace::new(&code);
-    Workspaces::save(conn, ws)
-}
-
-fn create_pass(conn: &mut PgConnection, pass: String) -> Result<Password> {
-    let password = Password::new(&pass, &Argon::new())?;
-    Passwords::save(conn, password)
+async fn register(
+    body: Json<RegistrationForm>,
+    mut service: RegistrationService,
+) -> Result<HttpResponse> {
+    service
+        .register(body.into_inner())
+        .map(|_| HttpResponse::Ok().finish())
 }
 
 #[cfg(test)]

@@ -1,5 +1,5 @@
-use crate::commons::error::IntoAppError;
 use crate::commons::Result;
+use crate::commons::{database::DbPool, error::IntoAppError};
 use diesel::{r2d2::ConnectionManager, PgConnection};
 use dotenv::dotenv;
 use log::info;
@@ -13,8 +13,6 @@ pub struct AppConfig {
     pub port: u16,
     pub database_url: String,
 }
-
-pub type DbPool = Pool<ConnectionManager<PgConnection>>;
 
 impl AppConfig {
     pub fn from_env() -> Result<AppConfig> {

@@ -7,9 +7,9 @@ use wmessage::app::routes::health_routes::{self};
 use wmessage::app::routes::registration_routes::{self};
 use wmessage::app::routes::{apikey_routes, channel_routes};
 use wmessage::app::routes::{connection_routes, plugin_routes};
+use wmessage::commons::config::AppConfig;
 use wmessage::commons::error::IntoAppError;
 use wmessage::commons::Result;
-use wmessage::config::AppConfig;
 use wmessage::plugins::{smtp, ConnectorPlugins};
 
 #[actix_web::main]

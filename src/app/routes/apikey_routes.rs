@@ -1,10 +1,9 @@
 use crate::{
-    commons::Result,
+    commons::{database::DbPool, Result},
     repository::{apikey_repo::ApiKeys, workspace_repo::Workspaces},
 };
 use crate::{
     commons::{encrypt::argon::Argon, error::IntoAppError, error::IntoRestError},
-    config::DbPool,
     models::apikey::ApiKey,
 };
 use actix_web::{

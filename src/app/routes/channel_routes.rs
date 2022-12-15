@@ -1,8 +1,9 @@
+use crate::commons::database::DbPool;
 use crate::commons::error::IntoRestError;
 use crate::commons::Result;
 use crate::repository::channel_repo::Channels;
 use crate::repository::workspace_repo::Workspaces;
-use crate::{commons::error::IntoAppError, config::DbPool, models::channel::Channel};
+use crate::{commons::error::IntoAppError, models::channel::Channel};
 use actix_web::HttpRequest;
 use actix_web::{
     web::{self, get, patch, post, Data, Json},
