@@ -4,3 +4,4 @@ pub mod connection_routes;
 pub mod health_routes;
 pub mod plugin_routes;
 pub mod registration_routes;
+pub mod workspace_routes;
