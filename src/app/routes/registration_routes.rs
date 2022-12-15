@@ -14,6 +14,7 @@ use actix_web::{
     HttpResponse, Scope,
 };
 use diesel::Connection;
+use diesel::PgConnection;
 use serde::Deserialize;
 use validator::Validate;
 
@@ -38,15 +39,32 @@ async fn register(pool: Data<DbPool>, body: Json<RegistrationForm>) -> Result<Ht
     let mut conn = pool.get().into_app_error()?;
 
     conn.transaction(|conn| {
-        let ws = Workspace::new(&form.workspace_code);
-        let ws = Workspaces::save(conn, ws)?;
-        let password = Password::new(&form.user_password, &Argon::new())?;
-        let password = Passwords::save(conn, password)?;
-        let user = User::new(conn, &ws, &form.user_email, &password, true);
-        let user = Users::save(conn, user);
+        let ws = create_ws(conn, form.workspace_code)?;
+        let password = create_pass(conn, form.user_password)?;
+        create_user(conn, ws, password, form.user_email)?;
         Ok(())
     })
     .map(|()| HttpResponse::Ok().finish())
+}
+
+fn create_user(
+    conn: &mut PgConnection,
+    ws: Workspace,
+    pass: Password,
+    email: String,
+) -> Result<User> {
+    let user = User::new(conn, ws, &email, pass, true);
+    Users::save(conn, user)
+}
+
+fn create_ws(conn: &mut PgConnection, code: String) -> Result<Workspace> {
+    let ws = Workspace::new(&code);
+    Workspaces::save(conn, ws)
+}
+
+fn create_pass(conn: &mut PgConnection, pass: String) -> Result<Password> {
+    let password = Password::new(&pass, &Argon::new())?;
+    Passwords::save(conn, password)
 }
 
 #[cfg(test)]

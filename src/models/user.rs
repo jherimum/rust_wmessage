@@ -20,16 +20,16 @@ pub struct User {
 impl User {
     pub fn new(
         _conn: &mut PgConnection,
-        ws: &Workspace,
+        ws: Workspace,
         email: &str,
-        password: &Password,
+        password: Password,
         owner: bool,
     ) -> User {
         User {
             id: new_uuid(),
             email: email.to_string(),
-            workspace_id: ws.id().clone(),
-            password_id: password.id().clone(),
+            workspace_id: *ws.id(),
+            password_id: *password.id(),
             owner: owner,
         }
     }
