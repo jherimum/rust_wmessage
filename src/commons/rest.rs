@@ -1,4 +1,6 @@
 use serde::Serialize;
+use std::{collections::HashMap, fmt::Debug};
+use url::Url;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RestErrorKind {
@@ -6,9 +8,19 @@ pub enum RestErrorKind {
 }
 
 #[derive(Serialize, Debug, Clone)]
-struct Payload<T>
+struct Response<T>
 where
-    T: Serialize,
+    T: Serialize + Clone + Debug,
 {
     data: T,
+    links: HashMap<String, Url>,
+}
+
+impl<T: Serialize + Clone + Debug> Response<T> {
+    pub fn new(data: T) -> Response<T> {
+        Response {
+            data: data,
+            links: HashMap::new(),
+        }
+    }
 }
