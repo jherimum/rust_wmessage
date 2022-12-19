@@ -1,7 +1,10 @@
+use crate::commons::database::DbPool;
+use crate::commons::error::IntoAppError;
 use crate::commons::validators::validate_password;
 use crate::commons::validators::CODE_REGEX;
 use crate::commons::Result;
 use crate::service::RegistrationService;
+use actix_web::web::Data;
 use actix_web::{
     web::{self, Json},
     HttpResponse, Scope,
@@ -25,13 +28,9 @@ pub fn routes() -> Scope {
     Scope::new("/registrations").service(web::resource("").route(web::post().to(register)))
 }
 
-async fn register(
-    body: Json<RegistrationForm>,
-    mut service: RegistrationService,
-) -> Result<HttpResponse> {
-    service
-        .register(body.into_inner())
-        .map(|_| HttpResponse::Ok().finish())
+async fn register(body: Json<RegistrationForm>, pool: Data<DbPool>) -> Result<HttpResponse> {
+    let mut conn = pool.get().into_app_error()?;
+    RegistrationService::register(&mut conn, body.into_inner()).map(|_| HttpResponse::Ok().finish())
 }
 
 #[cfg(test)]
