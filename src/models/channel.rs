@@ -1,5 +1,5 @@
 use super::workspace::Workspace;
-use crate::{commons::uuid::new_uuid, schema::channels};
+use crate::schema::channels;
 use derive_getters::Getters;
 use diesel::prelude::*;
 use serde_json::Value;
@@ -18,6 +18,7 @@ pub struct Channel {
 
 impl Channel {
     pub fn new(
+        id: Uuid,
         ws: Workspace,
         code: &str,
         description: &str,
@@ -25,9 +26,9 @@ impl Channel {
         enabled: bool,
     ) -> Channel {
         Channel {
-            id: new_uuid(),
+            id: id,
             workspace_id: ws.id().clone(),
-            code: code.to_uppercase(),
+            code: code.trim().to_uppercase(),
             vars: vars,
             description: description.to_string(),
             enabled: enabled,

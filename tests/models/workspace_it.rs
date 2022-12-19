@@ -24,7 +24,7 @@ fn test_find_ws_when_exists() {
 
     let ws = Workspaces::find(&mut conn, &id);
 
-    assert_eq!(ws.unwrap().unwrap(), Workspace::new(new_uuid(), code));
+    assert_eq!(ws.unwrap().unwrap(), Workspace::new(id.clone(), code));
 }
 
 #[test]
@@ -32,7 +32,7 @@ fn test_ws_creation_when_exists_ws_with_same_code() {
     let ctx = build_context("test_ws_creation_when_exists_ws_with_same_code");
     let mut conn = ctx.build_connection_and_migrate();
     let code = "code";
-    new_workspace(&mut conn, new_uuid(), "code");
+    new_workspace(&mut conn, new_uuid(), "CODE");
 
     let r: Result<Workspace> = Workspaces::save(&mut conn, Workspace::new(new_uuid(), code));
 

@@ -1,5 +1,6 @@
 use crate::commons::database::DbPool;
 use crate::commons::error::IntoRestError;
+use crate::commons::mock_uuid::new_uuid;
 use crate::commons::Result;
 use crate::repository::channel_repo::Channels;
 use crate::repository::workspace_repo::Workspaces;
@@ -75,6 +76,7 @@ async fn create(
     let workspace = Workspaces::find(&mut conn, &ws_id).into_not_found("Workspace not found")?;
 
     let channel = Channel::new(
+        new_uuid(),
         workspace,
         &form.code,
         &form.description,

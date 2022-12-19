@@ -1,24 +1,30 @@
-use super::error::AppError;
+use super::error::IntoAppError;
 use crate::commons::Result;
-use url::Url;
 use valico::json_schema::Scope;
 
 pub struct JsonSchema {
-    scope: Scope,
-    url: Url,
+    schema: serde_json::Value,
 }
 
 impl JsonSchema {
-    pub fn new(raw: &serde_json::Value) -> Result<Self> {
-        let mut scope = Scope::new().supply_defaults();
-        match scope.compile(raw.clone(), false) {
-            Ok(url) => Ok(JsonSchema { scope, url }),
-            Err(e) => Err(AppError::from(e)),
-        }
+    pub fn new(raw: serde_json::Value) -> Result<Self> {
+        Scope::new()
+            .supply_defaults()
+            .compile_and_return(raw.clone(), false)
+            .into_app_error()
+            .map(|_| JsonSchema { schema: raw })
     }
 
-    pub fn validate(&self, payload: &serde_json::Value) -> Result<Vec<String>> {
-        let validation = self.scope.resolve(&self.url).unwrap().validate(payload);
+    pub fn raw(self) -> serde_json::Value {
+        self.schema
+    }
+
+    pub fn validate(self, payload: &serde_json::Value) -> Result<Vec<String>> {
+        let validation = Scope::new()
+            .supply_defaults()
+            .compile_and_return(self.raw().clone(), false)
+            .into_app_error()?
+            .validate(payload);
 
         let mut errors: Vec<String> = vec![];
 
