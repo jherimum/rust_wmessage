@@ -1,6 +1,5 @@
 use super::password::Password;
 use super::workspace::Workspace;
-use crate::commons::uuid::new_uuid;
 use crate::schema::users;
 use derive_getters::Getters;
 use diesel::prelude::*;
@@ -20,16 +19,17 @@ pub struct User {
 impl User {
     pub fn new(
         _conn: &mut PgConnection,
+        id: Uuid,
         ws: Workspace,
         email: &str,
         password: Password,
         owner: bool,
     ) -> User {
         User {
-            id: new_uuid(),
+            id: id,
             email: email.to_string(),
-            workspace_id: *ws.id(),
-            password_id: *password.id(),
+            workspace_id: ws.id().clone(),
+            password_id: password.id().clone(),
             owner: owner,
         }
     }

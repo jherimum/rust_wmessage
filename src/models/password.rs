@@ -1,5 +1,4 @@
 use crate::commons::encrypt::Encrypter;
-use crate::commons::uuid::new_uuid;
 use crate::commons::Result;
 use crate::schema::passwords;
 use derive_getters::Getters;
@@ -14,19 +13,11 @@ pub struct Password {
 }
 
 impl Password {
-    pub fn new_with_id(
-        id: Uuid,
-        plain_password: &str,
-        encrypter: &dyn Encrypter,
-    ) -> Result<Password> {
+    pub fn new(id: Uuid, plain_password: &str, encrypter: &dyn Encrypter) -> Result<Password> {
         encrypter.encrypt(plain_password).map(|_hash| Password {
             id: id,
             hash: _hash,
         })
-    }
-
-    pub fn new(plain_password: &str, encrypter: &dyn Encrypter) -> Result<Password> {
-        Self::new_with_id(new_uuid(), plain_password, encrypter)
     }
 
     pub fn authenticate(&self, plain_password: &str, encrypter: &dyn Encrypter) -> Result<bool> {
@@ -51,7 +42,7 @@ mod test {
     #[test]
     fn test_new_password() {
         let id = new_uuid();
-        let pass = Password::new_with_id(id, "password", &mock_encrypt()).unwrap();
+        let pass = Password::new(id, "password", &mock_encrypt()).unwrap();
         assert_eq!(
             pass,
             Password {
@@ -64,7 +55,7 @@ mod test {
     #[test]
     fn test_authenticate() {
         let encrypt = mock_encrypt();
-        let pass = Password::new("password", &encrypt).unwrap();
+        let pass = Password::new(new_uuid(), "password", &encrypt).unwrap();
         assert!(pass.authenticate("password", &encrypt).unwrap());
         assert!(!pass.authenticate("password1", &encrypt).unwrap());
     }

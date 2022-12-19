@@ -42,7 +42,7 @@ fn test_pass_save() {
 
     let pass = Passwords::save(
         &mut conn,
-        Password::new_with_id(id, "password@123", &encrypter).unwrap(),
+        Password::new(id, "password@123", &encrypter).unwrap(),
     )
     .unwrap();
 

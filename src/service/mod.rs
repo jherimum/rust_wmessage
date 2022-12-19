@@ -1,5 +1,6 @@
 use crate::app::routes::registration_routes::RegistrationForm;
 use crate::commons::encrypt::argon::Argon;
+use crate::commons::mock_uuid::new_uuid;
 use crate::commons::Result;
 use crate::models::password::Password;
 use crate::models::user::User;
@@ -28,17 +29,17 @@ impl RegistrationService {
         pass: Password,
         email: String,
     ) -> Result<User> {
-        let user = User::new(conn, ws, &email, pass, true);
+        let user = User::new(conn, new_uuid(), ws, &email, pass, true);
         Users::save(conn, user)
     }
 
     fn create_ws(conn: &mut PgConnection, code: String) -> Result<Workspace> {
-        let ws = Workspace::new(&code);
+        let ws = Workspace::new(new_uuid(), &code);
         Workspaces::save(conn, ws)
     }
 
     fn create_pass(conn: &mut PgConnection, pass: String) -> Result<Password> {
-        let password = Password::new(&pass, &Argon::new())?;
+        let password = Password::new(new_uuid(), &pass, &Argon::new())?;
         Passwords::save(conn, password)
     }
 }

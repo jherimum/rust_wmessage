@@ -1,4 +1,3 @@
-use crate::commons::uuid::new_uuid;
 use crate::schema::workspaces;
 use derive_getters::Getters;
 use diesel::prelude::*;
@@ -12,9 +11,9 @@ pub struct Workspace {
 }
 
 impl Workspace {
-    pub fn new(code: &str) -> Self {
+    pub fn new(id: Uuid, code: &str) -> Self {
         Workspace {
-            id: new_uuid(),
+            id: id,
             code: code.to_string(),
         }
     }
