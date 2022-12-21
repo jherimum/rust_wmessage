@@ -1,6 +1,4 @@
-use crate::{
-    commons::database::DbPool, plugins::ConnectorPlugins, repository::workspace_repo::Workspaces,
-};
+use crate::{commons::database::DbPool, models::workspace::Workspace, plugins::ConnectorPlugins};
 use actix_web::{
     web::{self, get, post, Data, Json, Path},
     HttpResponse, Responder, Scope,
@@ -34,7 +32,7 @@ pub async fn create(
     let _form = body.into_inner();
     let ws_id = path.into_inner();
     let mut conn = pool.get().expect("error");
-    let _ws = Workspaces::find(&mut conn, &ws_id).expect("msg");
+    let _ws = Workspace::find(&mut conn, &ws_id).expect("msg");
 
     //let mut conn = pool.get().unwrap();
 

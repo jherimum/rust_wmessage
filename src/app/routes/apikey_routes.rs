@@ -1,7 +1,5 @@
-use crate::{
-    commons::{database::DbPool, Result},
-    repository::{apikey_repo::ApiKeys, workspace_repo::Workspaces},
-};
+use crate::commons::{database::DbPool, Result};
+use crate::models::workspace::Workspace;
 use crate::{
     commons::{encrypt::argon::Argon, error::IntoAppError, error::IntoRestError},
     models::apikey::ApiKey,
@@ -51,9 +49,9 @@ pub async fn create(
     let ws_id = path.into_inner();
     let form = body.into_inner();
 
-    let ws = Workspaces::find(&mut conn, &ws_id).into_not_found("Worspace not found")?;
+    let ws = Workspace::find(&mut conn, &ws_id).into_not_found("Worspace not found")?;
     let result = ApiKey::new(ws, &form.name, form.ttl, Argon::default())?;
-    let tuple = (ApiKeys::save(&mut conn, result.0)?, result.1);
+    let tuple = (ApiKey::save(&mut conn, result.0)?, result.1);
 
     Ok(HttpResponse::Ok().json(ApiKeyResponse::from(tuple)))
 }

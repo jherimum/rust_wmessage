@@ -2,8 +2,7 @@ use crate::commons::database::DbPool;
 use crate::commons::error::IntoRestError;
 use crate::commons::mock_uuid::new_uuid;
 use crate::commons::Result;
-use crate::repository::channel_repo::Channels;
-use crate::repository::workspace_repo::Workspaces;
+use crate::models::workspace::Workspace;
 use crate::{commons::error::IntoAppError, models::channel::Channel};
 use actix_web::HttpRequest;
 use actix_web::{
@@ -73,7 +72,7 @@ async fn create(
     let form = payload.into_inner();
     let ws_id = path.into_inner();
 
-    let workspace = Workspaces::find(&mut conn, &ws_id).into_not_found("Workspace not found")?;
+    let workspace = Workspace::find(&mut conn, &ws_id).into_not_found("Workspace not found")?;
 
     let channel = Channel::new(
         new_uuid(),
@@ -83,7 +82,7 @@ async fn create(
         form.vars,
         form.enabled,
     );
-    let channel = Channels::save(&mut conn, channel)?;
+    let channel = Channel::save(&mut conn, channel)?;
 
     Ok(HttpResponse::Created().json(to_response(channel, req)?))
 }

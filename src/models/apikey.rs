@@ -1,11 +1,11 @@
 use super::workspace::Workspace;
-use crate::commons::encrypt::Encrypter;
 use crate::commons::uuid::new_uuid;
 use crate::commons::Result;
+use crate::commons::{encrypt::Encrypter, error::AppError};
 use crate::schema::api_keys;
 use chrono::{Duration, NaiveDateTime, Utc};
 use derive_getters::Getters;
-use diesel::prelude::*;
+use diesel::{insert_into, prelude::*};
 use uuid::Uuid;
 
 #[derive(Insertable, Queryable, Identifiable, Debug, Clone, Getters)]
@@ -37,5 +37,13 @@ impl ApiKey {
             },
             format!("{}.{}", _id, key),
         ))
+    }
+
+    pub fn save(conn: &mut PgConnection, api_key: ApiKey) -> Result<ApiKey> {
+        match insert_into(api_keys::table).values(&api_key).execute(conn) {
+            Ok(1) => Ok(api_key),
+            Ok(_) => Err(AppError::database_error("apikey not inserted")),
+            Err(err) => Err(AppError::from(err)),
+        }
     }
 }
