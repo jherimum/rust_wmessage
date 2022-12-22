@@ -2,28 +2,28 @@ use super::password::Password;
 use super::workspace::Workspace;
 use crate::commons::error::AppError;
 use crate::commons::error::IntoAppError;
+use crate::commons::Id;
 use crate::commons::Result;
 use crate::schema::users;
 use derive_getters::Getters;
 use diesel::insert_into;
 use diesel::prelude::*;
 use diesel::PgConnection;
-use uuid::Uuid;
 
 #[derive(Insertable, Queryable, Identifiable, Debug, Clone, PartialEq, Eq, Getters)]
 #[diesel(table_name = users)]
 pub struct User {
-    id: Uuid,
+    id: Id,
     email: String,
-    workspace_id: Uuid,
+    workspace_id: Id,
     owner: bool,
-    password_id: Uuid,
+    password_id: Id,
 }
 
 impl User {
     pub fn new(
         _conn: &mut PgConnection,
-        id: Uuid,
+        id: Id,
         ws: Workspace,
         email: &str,
         password: Password,

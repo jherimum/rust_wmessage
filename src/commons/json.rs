@@ -2,6 +2,8 @@ use super::error::IntoAppError;
 use crate::commons::Result;
 use valico::json_schema::Scope;
 
+pub type Json = serde_json::Value;
+
 pub struct JsonSchema {
     schema: serde_json::Value,
 }

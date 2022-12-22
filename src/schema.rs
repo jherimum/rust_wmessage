@@ -50,6 +50,18 @@ diesel::table! {
 }
 
 diesel::table! {
+    messages (id) {
+        id -> Uuid,
+        workspace_id -> Uuid,
+        channel_id -> Uuid,
+        message_type_version_id -> Uuid,
+        payload -> Jsonb,
+        scheduled_to -> Nullable<Timestamp>,
+        status -> Varchar,
+    }
+}
+
+diesel::table! {
     passwords (id) {
         id -> Uuid,
         hash -> Varchar,
@@ -73,10 +85,11 @@ diesel::table! {
     }
 }
 
-diesel::joinable!(api_keys -> workspaces (workspace_id));
 diesel::joinable!(channels -> workspaces (workspace_id));
 diesel::joinable!(message_type_versions -> message_types (message_type_id));
 diesel::joinable!(message_types -> channels (channel_id));
+diesel::joinable!(messages -> channels (channel_id));
+diesel::joinable!(messages -> message_type_versions (message_type_version_id));
 diesel::joinable!(users -> passwords (password_id));
 diesel::joinable!(users -> workspaces (workspace_id));
 
@@ -86,6 +99,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     health,
     message_type_versions,
     message_types,
+    messages,
     passwords,
     users,
     workspaces,

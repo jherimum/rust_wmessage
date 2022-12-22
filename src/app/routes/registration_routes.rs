@@ -3,6 +3,7 @@ use crate::commons::error::IntoAppError;
 use crate::commons::validators::validate_password;
 use crate::commons::validators::CODE_REGEX;
 use crate::commons::Result;
+use crate::models::Code;
 use crate::service::RegistrationService;
 use actix_web::web::Data;
 use actix_web::{
@@ -15,7 +16,7 @@ use validator::Validate;
 #[derive(Deserialize, Debug, Validate)]
 pub struct RegistrationForm {
     #[validate(regex(path = "CODE_REGEX", message = "invalid code"))]
-    pub workspace_code: String,
+    pub workspace_code: Code,
 
     #[validate(email)]
     pub user_email: String,

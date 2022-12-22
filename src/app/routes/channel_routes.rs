@@ -1,12 +1,14 @@
 use crate::commons::database::DbPool;
 use crate::commons::error::IntoRestError;
-use crate::commons::mock_uuid::new_uuid;
+use crate::commons::id::Id::new_id;
+use crate::commons::json::Json;
 use crate::commons::Result;
 use crate::models::workspace::Workspace;
+use crate::models::Code;
 use crate::{commons::error::IntoAppError, models::channel::Channel};
 use actix_web::HttpRequest;
 use actix_web::{
-    web::{self, get, patch, post, Data, Json},
+    web::{self, get, patch, post, Data},
     HttpResponse, Scope,
 };
 use serde::{Deserialize, Serialize};
@@ -28,9 +30,9 @@ pub fn routes() -> Scope {
 
 #[derive(Deserialize, Debug, Clone)]
 struct ChannelForm {
-    code: String,
+    code: Code,
     description: String,
-    vars: serde_json::Value,
+    vars: Json,
     enabled: bool,
 }
 
@@ -64,7 +66,7 @@ fn to_response(channel: Channel, req: HttpRequest) -> Result<ChannelResponse> {
 async fn create(
     pool: Data<DbPool>,
     path: web::Path<uuid::Uuid>,
-    payload: Json<ChannelForm>,
+    payload: web::Json<ChannelForm>,
     req: HttpRequest,
 ) -> Result<HttpResponse> {
     let mut conn = pool.get().into_app_error()?;
@@ -75,9 +77,9 @@ async fn create(
     let workspace = Workspace::find(&mut conn, &ws_id).into_not_found("Workspace not found")?;
 
     let channel = Channel::new(
-        new_uuid(),
+        new_id(),
         workspace,
-        &form.code,
+        form.code.clone(),
         &form.description,
         form.vars,
         form.enabled,

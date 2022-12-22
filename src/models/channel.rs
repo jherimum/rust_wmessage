@@ -1,22 +1,24 @@
 use super::workspace::Workspace;
+use super::Code;
 use crate::commons::error::IntoAppError;
+use crate::commons::json::Json;
+use crate::commons::Id;
 use crate::{
     commons::{error::AppError, Result},
     schema::channels::{self, dsl},
 };
 use derive_getters::Getters;
 use diesel::{insert_into, prelude::*};
-use serde_json::Value;
 use uuid::Uuid;
 
 #[derive(Insertable, Identifiable, Debug, Clone, PartialEq, Queryable, Eq, Getters)]
 #[diesel(table_name = channels)]
 pub struct Channel {
-    id: Uuid,
-    workspace_id: Uuid,
-    code: String,
+    id: Id,
+    workspace_id: Id,
+    code: Code,
     description: String,
-    vars: Value,
+    vars: Json,
     enabled: bool,
 }
 
@@ -24,9 +26,9 @@ impl Channel {
     pub fn new(
         id: Uuid,
         ws: Workspace,
-        code: &str,
+        code: Code,
         description: &str,
-        vars: Value,
+        vars: Json,
         enabled: bool,
     ) -> Channel {
         Channel {

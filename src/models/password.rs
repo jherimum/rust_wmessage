@@ -1,6 +1,6 @@
 use crate::commons::error::IntoAppError;
-use crate::commons::Result;
 use crate::commons::{encrypt::Encrypter, error::AppError};
+use crate::commons::{Id, Result};
 use crate::schema::passwords;
 use derive_getters::Getters;
 use diesel::{insert_into, prelude::*};
@@ -9,12 +9,12 @@ use uuid::Uuid;
 #[derive(Insertable, Queryable, Identifiable, Debug, Clone, PartialEq, Eq, Getters)]
 #[diesel(table_name = passwords)]
 pub struct Password {
-    pub id: Uuid,
+    pub id: Id,
     pub hash: String,
 }
 
 impl Password {
-    pub fn new(id: Uuid, plain_password: &str, encrypter: &dyn Encrypter) -> Result<Password> {
+    pub fn new(id: Id, plain_password: &str, encrypter: &dyn Encrypter) -> Result<Password> {
         encrypter.encrypt(plain_password).map(|_hash| Password {
             id: id,
             hash: _hash,
@@ -47,7 +47,7 @@ impl Password {
 
 #[cfg(test)]
 mod test {
-    use crate::commons::{encrypt::MockEncrypter, uuid::new_uuid};
+    use crate::commons::{encrypt::MockEncrypter, id::Id::new_id};
 
     use super::Password;
 
@@ -61,7 +61,7 @@ mod test {
 
     #[test]
     fn test_new_password() {
-        let id = new_uuid();
+        let id = new_id();
         let pass = Password::new(id, "password", &mock_encrypt()).unwrap();
         assert_eq!(
             pass,
@@ -75,7 +75,7 @@ mod test {
     #[test]
     fn test_authenticate() {
         let encrypt = mock_encrypt();
-        let pass = Password::new(new_uuid(), "password", &encrypt).unwrap();
+        let pass = Password::new(new_id(), "password", &encrypt).unwrap();
         assert!(pass.authenticate("password", &encrypt).unwrap());
         assert!(!pass.authenticate("password1", &encrypt).unwrap());
     }

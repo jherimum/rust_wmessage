@@ -5,7 +5,7 @@ use actix_web::{App, HttpResponse, HttpServer};
 use log::info;
 use wmessage::app::routes::health_routes::{self};
 use wmessage::app::routes::registration_routes::{self};
-use wmessage::app::routes::{apikey_routes, channel_routes};
+use wmessage::app::routes::{apikey_routes, channel_routes, message_routes};
 use wmessage::app::routes::{connection_routes, plugin_routes};
 use wmessage::commons::config::AppConfig;
 use wmessage::commons::error::IntoAppError;
@@ -30,12 +30,13 @@ async fn main() -> Result<()> {
             )])))
             .service(
                 scope("/api")
+                    .service(message_routes::routes())
                     .service(apikey_routes::create)
                     .service(health_routes::routes())
                     .service(plugin_routes::routes())
                     .service(registration_routes::routes())
-                    .service(web::resource("").route(web::get().to(index)))
                     .service(channel_routes::routes())
+                    .service(web::resource("").route(web::get().to(index)))
                     .service(scope("/workspaces/{ws_id}").service(connection_routes::routes())),
             )
     })

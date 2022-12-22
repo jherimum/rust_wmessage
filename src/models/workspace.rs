@@ -1,32 +1,28 @@
 use crate::{
     commons::{
         error::{AppError, IntoAppError},
-        Result,
+        Id, Result,
     },
     schema::workspaces,
 };
 use derive_getters::Getters;
 use diesel::{insert_into, prelude::*};
-use uuid::Uuid;
 
-use super::ModelErrorKind;
+use super::{Code, ModelErrorKind};
 
 #[derive(Insertable, Identifiable, Debug, Clone, PartialEq, Queryable, Eq, Getters)]
 #[diesel(table_name = workspaces)]
 pub struct Workspace {
-    id: Uuid,
-    code: String,
+    id: Id,
+    code: Code,
 }
 
 impl Workspace {
-    pub fn new(id: Uuid, code: &str) -> Self {
-        Workspace {
-            id: id,
-            code: code.to_string(),
-        }
+    pub fn new(id: Id, code: Code) -> Self {
+        Workspace { id: id, code: code }
     }
 
-    pub fn find(conn: &mut PgConnection, id: &Uuid) -> Result<Option<Workspace>> {
+    pub fn find(conn: &mut PgConnection, id: &Id) -> Result<Option<Workspace>> {
         workspaces::table
             .filter(workspaces::id.eq(id))
             .first::<Workspace>(conn)

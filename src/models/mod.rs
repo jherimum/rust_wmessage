@@ -1,13 +1,15 @@
 pub mod apikey;
 pub mod channel;
 pub mod health;
+pub mod message;
 pub mod message_type;
 pub mod message_type_version;
 pub mod password;
 pub mod user;
 pub mod workspace;
-
 use thiserror::Error;
+
+pub type Code = String;
 
 #[derive(Debug, Clone, PartialEq, Eq, Error)]
 pub enum ModelErrorKind {

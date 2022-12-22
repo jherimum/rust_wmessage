@@ -1,26 +1,28 @@
-use crate::schema::message_types;
+use crate::{
+    commons::{json::Json, Id},
+    schema::message_types,
+};
 use diesel::prelude::*;
-use uuid::Uuid;
 
-use super::channel::Channel;
+use super::{channel::Channel, Code};
 
 #[derive(Insertable, Identifiable, Debug, Clone, PartialEq, Queryable, Eq)]
 #[diesel(table_name = message_types)]
 pub struct MessageType {
-    id: Uuid,
-    code: String,
+    id: Id,
+    code: Code,
     description: String,
-    vars: serde_json::Value,
+    vars: Json,
     enabled: bool,
-    channel_id: Uuid,
+    channel_id: Id,
 }
 
 impl MessageType {
     pub fn new(
-        id: Uuid,
-        code: &str,
+        id: Id,
+        code: Code,
         description: &str,
-        vars: serde_json::Value,
+        vars: Json,
         enabled: bool,
         channel: Channel,
     ) -> Self {

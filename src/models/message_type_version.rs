@@ -1,6 +1,7 @@
 use super::message_type::MessageType;
 use super::ModelErrorKind;
-use crate::commons::json_schema::JsonSchema;
+use crate::commons::json::{Json, JsonSchema};
+use crate::commons::Id;
 use crate::schema::message_type_versions::dsl;
 use crate::{
     commons::{error::AppError, Result},
@@ -12,12 +13,12 @@ use uuid::Uuid;
 #[derive(Identifiable, Insertable, Debug, Clone, PartialEq, Queryable)]
 #[diesel(table_name = message_type_versions)]
 pub struct MessageTypeVersion {
-    id: Uuid,
+    id: Id,
     number: i32,
-    schema: serde_json::Value,
-    vars: serde_json::Value,
+    schema: Json,
+    vars: Json,
     enabled: bool,
-    message_type_id: Uuid,
+    message_type_id: Id,
 }
 
 impl MessageTypeVersion {
@@ -26,7 +27,7 @@ impl MessageTypeVersion {
         message_type: &MessageType,
         number: i32,
         schema: JsonSchema,
-        vars: serde_json::Value,
+        vars: Json,
         enabled: bool,
     ) -> Self {
         MessageTypeVersion {

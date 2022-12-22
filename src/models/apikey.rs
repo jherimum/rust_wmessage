@@ -1,21 +1,20 @@
 use super::workspace::Workspace;
-use crate::commons::uuid::new_uuid;
-use crate::commons::Result;
+use crate::commons::id::Id::new_id;
 use crate::commons::{encrypt::Encrypter, error::AppError};
+use crate::commons::{Id, Result, Timestamp};
 use crate::schema::api_keys;
-use chrono::{Duration, NaiveDateTime, Utc};
+use chrono::{Duration, Utc};
 use derive_getters::Getters;
 use diesel::{insert_into, prelude::*};
-use uuid::Uuid;
 
 #[derive(Insertable, Queryable, Identifiable, Debug, Clone, Getters)]
 #[diesel(table_name = api_keys)]
 pub struct ApiKey {
-    id: Uuid,
-    workspace_id: Uuid,
+    id: Id,
+    workspace_id: Id,
     name: String,
     hash: String,
-    expires_at: NaiveDateTime,
+    expires_at: Timestamp,
 }
 
 impl ApiKey {
@@ -25,8 +24,8 @@ impl ApiKey {
         ttl: u8,
         encrypter: impl Encrypter,
     ) -> Result<(ApiKey, String)> {
-        let _id = new_uuid();
-        let key = new_uuid();
+        let _id = new_id();
+        let key = new_id();
         Ok((
             ApiKey {
                 id: _id,

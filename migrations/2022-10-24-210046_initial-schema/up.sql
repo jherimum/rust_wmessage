@@ -75,4 +75,20 @@ create table api_keys(
 	expires_at timestamp NOT NULL,
 	CONSTRAINT pk_api_keys PRIMARY KEY (id),
 	CONSTRAINT workspace_fk FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
-)
+);
+
+
+create table messages(
+	id uuid NOT NULL,
+	workspace_id uuid NOT NULL,
+	channel_id uuid NOT NULL,
+	message_type_version_id uuid NOT NULL,
+	payload jsonb NOT NULL,
+	scheduled_to timestamp NULL,
+	status varchar NOT NULL, 
+
+	CONSTRAINT pk_messages PRIMARY KEY (id),
+	CONSTRAINT workspace_fk FOREIGN KEY (workspace_id) REFERENCES workspaces(id),
+	CONSTRAINT channel_fk FOREIGN KEY (channel_id) REFERENCES channels(id),
+	CONSTRAINT message_type_version_fk FOREIGN KEY (message_type_version_id) REFERENCES message_type_versions(id)
+);

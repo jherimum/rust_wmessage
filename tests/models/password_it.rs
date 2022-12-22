@@ -1,5 +1,5 @@
 use wmessage::{
-    commons::{encrypt::MockEncrypter, uuid::new_uuid},
+    commons::{encrypt::MockEncrypter, id::Id::new_id},
     models::password::Password,
 };
 
@@ -10,7 +10,7 @@ fn test_find_password_when_do_not_exists() {
     let ctx = build_context("test_find_password_when_do_not_exists");
     let mut conn = ctx.build_connection_and_migrate();
 
-    match Password::find(&mut conn, new_uuid()) {
+    match Password::find(&mut conn, new_id()) {
         Ok(None) => assert!(true),
         _ => panic!(),
     }
@@ -21,7 +21,7 @@ fn test_find_password_when_exists() {
     let ctx = build_context("test_find_password_when_exists");
     let mut conn = ctx.build_connection_and_migrate();
 
-    let id = new_uuid();
+    let id = new_id();
 
     new_password(&mut conn, &id, "hash");
 
@@ -37,7 +37,7 @@ fn test_pass_save() {
     let mut conn = ctx.build_connection_and_migrate();
     let encrypter = MockEncrypter::new();
 
-    let id = new_uuid();
+    let id = new_id();
 
     let pass = Password::save(
         &mut conn,
