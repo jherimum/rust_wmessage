@@ -1,6 +1,7 @@
 use crate::commons::error::IntoRestError;
 use crate::commons::id::id::new_id;
-use crate::commons::types::{Code, DbPool, Id, Json, Result};
+use crate::commons::rest::{AsResponse, IntoLinks, Link, Links, Response, SELF_ID};
+use crate::commons::types::{Code, Conn, DbPool, Id, Json, Result};
 use crate::models::workspace::Workspace;
 use crate::{commons::error::IntoAppError, models::channel::Channel};
 use actix_web::HttpRequest;
@@ -8,8 +9,7 @@ use actix_web::{
     web::{self, get, patch, post, Data},
     HttpResponse, Scope,
 };
-use serde::{Deserialize, Serialize};
-use url::Url;
+use serde::Deserialize;
 
 pub fn routes() -> Scope {
     let channels = web::resource("")
@@ -26,65 +26,81 @@ pub fn routes() -> Scope {
         .service(channel)
 }
 
+impl AsResponse for Channel {
+    type T = Channel;
+
+    fn to_response(self, req: HttpRequest) -> Result<Response<Self::T>> {
+        Response::new(self, req)
+    }
+}
+
+impl IntoLinks for Channel {
+    fn to_links(&self, req: HttpRequest) -> Result<Links> {
+        let mut vec = Vec::new();
+        vec.push(Link::new(
+            SELF_ID,
+            req.url_for(
+                "channel",
+                &[self.workspace_id().to_string(), self.id().to_string()],
+            )
+            .into_app_error()?,
+        ));
+        /*
+        vec.push(Link::new(
+            "workspace",
+            req.url_for("workspace", &[self.workspace_id().to_string()])
+                .into_app_error()?,
+        ));
+
+        vec.push(Link::new(
+            "message_types",
+            req.url_for(
+                "message_types",
+                &[self.workspace_id().to_string(), self.id().to_string()],
+            )
+            .into_app_error()?,
+        ));
+         */
+        Ok(Links::new(vec))
+    }
+}
+
 #[derive(Deserialize, Debug, Clone)]
-struct ChannelForm {
+struct CreateChannel {
     code: Code,
     description: String,
     vars: Json,
     enabled: bool,
 }
 
-#[derive(Serialize, Debug, Clone)]
-struct ChannelResponse {
-    id: uuid::Uuid,
-    code: String,
-    description: String,
-    vars: serde_json::Value,
-    enabled: bool,
-    self_url: Url,
-}
-
-fn to_response(channel: Channel, req: HttpRequest) -> Result<ChannelResponse> {
-    Ok(ChannelResponse {
-        id: *channel.id(),
-        code: channel.code().clone(),
-        description: channel.description().clone(),
-        vars: channel.vars().clone(),
-        enabled: *channel.enabled(),
-        self_url: req.url_for(
-            "channel",
-            &[
-                channel.workspace_id().to_string(),
-                channel.id().clone().to_string(),
-            ],
-        )?,
-    })
-}
-
 async fn create(
     pool: Data<DbPool>,
     path: web::Path<Id>,
-    payload: web::Json<ChannelForm>,
+    payload: web::Json<CreateChannel>,
     req: HttpRequest,
 ) -> Result<HttpResponse> {
     let mut conn = pool.get().into_app_error()?;
-
-    let form = payload.into_inner();
-    let ws_id: Id = path.into_inner();
-
-    let workspace = Workspace::find(&mut conn, &ws_id).into_not_found("Workspace not found")?;
-
-    let channel = Channel::new(
-        new_id(),
-        workspace,
-        form.code.clone(),
-        &form.description,
-        form.vars,
-        form.enabled,
-    );
+    let ws_id = path.into_inner();
+    let workspace = retrieve_workspace(&mut conn, ws_id)?;
+    let channel = build_channel(workspace, payload);
     let channel = Channel::save(&mut conn, channel)?;
 
-    Ok(HttpResponse::Created().json(to_response(channel, req)?))
+    Ok(channel.to_response(req)?.ok())
+}
+
+fn retrieve_workspace(conn: &mut Conn, ws_id: Id) -> Result<Workspace> {
+    Workspace::find(conn, ws_id).into_not_found("Workspace not found")
+}
+
+fn build_channel(workspace: Workspace, payload: web::Json<CreateChannel>) -> Channel {
+    Channel::new(
+        new_id(),
+        workspace,
+        payload.code.to_owned(),
+        payload.description.to_owned(),
+        payload.vars.clone(),
+        payload.enabled,
+    )
 }
 
 async fn all() -> Result<HttpResponse> {

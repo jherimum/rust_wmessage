@@ -36,7 +36,10 @@ impl<T, E: std::fmt::Debug + Into<AppError>> IntoAppError<T> for Result<T, E> {
     fn into_app_error(self) -> Result<T> {
         match self {
             Ok(v) => Ok(v),
-            Err(err) => Err(err.into()),
+            Err(err) => {
+                println!("xxxxxxxxxxx: {:?}", err);
+                Err(err.into())
+            }
         }
     }
 }
@@ -66,12 +69,14 @@ pub struct AppError {
 #[derive(Debug, Serialize)]
 struct AppErrorResponse {
     message: String,
+    cause: Option<String>,
 }
 
 impl From<AppError> for AppErrorResponse {
     fn from(err: AppError) -> Self {
         AppErrorResponse {
             message: err.message,
+            cause: err.cause,
         }
     }
 }

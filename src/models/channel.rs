@@ -7,9 +7,11 @@ use crate::{
 };
 use derive_getters::Getters;
 use diesel::{insert_into, prelude::*};
+use serde::Serialize;
+
 use uuid::Uuid;
 
-#[derive(Insertable, Identifiable, Debug, Clone, PartialEq, Queryable, Eq, Getters)]
+#[derive(Insertable, Identifiable, Debug, Clone, PartialEq, Queryable, Eq, Getters, Serialize)]
 #[diesel(table_name = channels)]
 pub struct Channel {
     id: Id,
@@ -25,7 +27,7 @@ impl Channel {
         id: Uuid,
         ws: Workspace,
         code: Code,
-        description: &str,
+        description: String,
         vars: Json,
         enabled: bool,
     ) -> Channel {

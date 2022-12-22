@@ -51,7 +51,7 @@ impl ApiKey {
     }
 
     pub fn workspace(self, conn: &mut PgConnection) -> Result<Workspace> {
-        Workspace::find(conn, self.id())
+        Workspace::find(conn, *self.id())
             .into_app_error()?
             .into_entity_not_found(&format!("workspace with id {} not found", self.id()))
     }

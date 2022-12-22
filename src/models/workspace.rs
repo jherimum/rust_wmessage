@@ -1,7 +1,7 @@
 use crate::{
     commons::{
         error::{AppError, IntoAppError},
-        types::{Code, Id, Result},
+        types::{Code, Conn, Id, Result},
     },
     schema::workspaces,
 };
@@ -22,7 +22,7 @@ impl Workspace {
         Workspace { id, code }
     }
 
-    pub fn find(conn: &mut PgConnection, id: &Id) -> Result<Option<Workspace>> {
+    pub fn find(conn: &mut Conn, id: Id) -> Result<Option<Workspace>> {
         workspaces::table
             .filter(workspaces::id.eq(id))
             .first::<Workspace>(conn)
@@ -30,7 +30,7 @@ impl Workspace {
             .into_app_error()
     }
 
-    pub fn exists_code(conn: &mut PgConnection, code: &str) -> Result<bool> {
+    pub fn exists_code(conn: &mut Conn, code: &String) -> Result<bool> {
         workspaces::table
             .filter(workspaces::code.eq(code))
             .count()
@@ -39,7 +39,7 @@ impl Workspace {
             .into_app_error()
     }
 
-    pub fn save(conn: &mut PgConnection, ws: Workspace) -> Result<Workspace> {
+    pub fn save(conn: &mut Conn, ws: Workspace) -> Result<Workspace> {
         if Self::exists_code(conn, ws.code())? {
             return Err(AppError::model_error(
                 ModelErrorKind::WorkspaceCodeAlreadyExists {
