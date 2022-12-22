@@ -15,10 +15,11 @@ pub fn routes() -> Scope {
     let channels = web::resource("")
         .route(post().to(create))
         .route(get().to(all))
-        .name("channel");
+        .name("channels");
     let channel = web::resource("/{channel_id}")
         .route(get().to(find))
-        .route(patch().to(update));
+        .route(patch().to(update))
+        .name("channel");
 
     Scope::new("/workspaces/{ws_id}/channels")
         .service(channels)
