@@ -1,8 +1,5 @@
-use super::error::IntoAppError;
-use crate::commons::Result;
+use super::{error::IntoAppError, types::Result};
 use valico::json_schema::Scope;
-
-pub type Json = serde_json::Value;
 
 pub struct JsonSchema {
     schema: serde_json::Value,
@@ -24,7 +21,7 @@ impl JsonSchema {
     pub fn validate(self, payload: &serde_json::Value) -> Result<Vec<String>> {
         let validation = Scope::new()
             .supply_defaults()
-            .compile_and_return(self.raw().clone(), false)
+            .compile_and_return(self.raw(), false)
             .into_app_error()?
             .validate(payload);
 

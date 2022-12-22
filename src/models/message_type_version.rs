@@ -1,27 +1,61 @@
 use super::message_type::MessageType;
 use super::ModelErrorKind;
-use crate::commons::json::{Json, JsonSchema};
-use crate::commons::Id;
+use crate::commons::error::IntoAppError;
+use crate::commons::json::JsonSchema;
+use crate::commons::types::{Code, Id, Json, Result, Version};
 use crate::schema::message_type_versions::dsl;
+use crate::schema::workspaces;
+use crate::schema::{channels, message_types};
 use crate::{
-    commons::{error::AppError, Result},
+    commons::error::AppError,
     schema::message_type_versions::{self},
 };
+use derive_getters::Getters;
 use diesel::{insert_into, prelude::*};
 use uuid::Uuid;
 
-#[derive(Identifiable, Insertable, Debug, Clone, PartialEq, Queryable)]
+#[derive(Identifiable, Insertable, Debug, Clone, PartialEq, Eq, Queryable, Getters)]
 #[diesel(table_name = message_type_versions)]
 pub struct MessageTypeVersion {
     id: Id,
-    number: i32,
+    number: Version,
     schema: Json,
     vars: Json,
     enabled: bool,
     message_type_id: Id,
+    channel_id: Id,
+    workspace_id: Id,
 }
 
 impl MessageTypeVersion {
+    pub fn find() -> Result<Option<MessageTypeVersion>> {
+        Ok(None)
+    }
+
+    pub fn find_one(
+        conn: &mut PgConnection,
+        ws_code: Code,
+        channel_code: Code,
+        message_type_code: Code,
+        message_type_version: Version,
+    ) -> Result<Option<MessageTypeVersion>> {
+        message_type_versions::table
+            .inner_join(
+                message_types::table.inner_join(channels::table.inner_join(workspaces::table)),
+            )
+            .filter(
+                workspaces::code
+                    .eq(ws_code)
+                    .and(channels::code.eq(channel_code))
+                    .and(message_types::code.eq(message_type_code))
+                    .and(message_type_versions::number.eq(message_type_version)),
+            )
+            .select(message_type_versions::table::all_columns())
+            .first::<MessageTypeVersion>(conn)
+            .optional()
+            .into_app_error()
+    }
+
     pub fn new(
         id: Uuid,
         message_type: &MessageType,
@@ -31,12 +65,14 @@ impl MessageTypeVersion {
         enabled: bool,
     ) -> Self {
         MessageTypeVersion {
-            id: id,
-            number: number,
+            id,
+            number,
             schema: schema.raw(),
-            vars: vars,
-            enabled: enabled,
-            message_type_id: message_type.id().clone(),
+            vars,
+            enabled,
+            message_type_id: *message_type.id(),
+            channel_id: *message_type.channel_id(),
+            workspace_id: *message_type.workspace_id(),
         }
     }
 

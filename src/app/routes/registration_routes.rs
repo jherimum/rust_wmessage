@@ -1,9 +1,9 @@
-use crate::commons::database::DbPool;
 use crate::commons::error::IntoAppError;
+use crate::commons::types::Code;
+use crate::commons::types::DbPool;
+use crate::commons::types::Result;
 use crate::commons::validators::validate_password;
 use crate::commons::validators::CODE_REGEX;
-use crate::commons::Result;
-use crate::models::Code;
 use crate::service::RegistrationService;
 use actix_web::web::Data;
 use actix_web::{

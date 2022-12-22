@@ -1,10 +1,8 @@
 use super::workspace::Workspace;
-use super::Code;
 use crate::commons::error::IntoAppError;
-use crate::commons::json::Json;
-use crate::commons::Id;
+use crate::commons::types::{Code, Id, Json, Result};
 use crate::{
-    commons::{error::AppError, Result},
+    commons::error::AppError,
     schema::channels::{self, dsl},
 };
 use derive_getters::Getters;
@@ -32,13 +30,25 @@ impl Channel {
         enabled: bool,
     ) -> Channel {
         Channel {
-            id: id,
-            workspace_id: ws.id().clone(),
+            id,
+            workspace_id: *ws.id(),
             code: code.trim().to_uppercase(),
-            vars: vars,
+            vars,
             description: description.to_string(),
-            enabled: enabled,
+            enabled,
         }
+    }
+
+    pub fn find_by_ws_and_code(
+        conn: &mut PgConnection,
+        ws: Workspace,
+        code: &str,
+    ) -> Result<Option<Channel>> {
+        channels::table
+            .filter(dsl::workspace_id.eq(ws.id()).and(dsl::code.eq(code)))
+            .first::<Channel>(conn)
+            .optional()
+            .into_app_error()
     }
 
     pub fn exists_code(conn: &mut PgConnection, _code: &str) -> Result<bool> {
@@ -51,7 +61,7 @@ impl Channel {
     }
 
     pub fn save(conn: &mut PgConnection, channel: Channel) -> Result<Channel> {
-        if Self::exists_code(conn, &channel.code())? {
+        if Self::exists_code(conn, channel.code())? {
             return Err(AppError::model_error(
                 crate::models::ModelErrorKind::ChannelCodeAlreadyExists {
                     code: channel.code().clone(),

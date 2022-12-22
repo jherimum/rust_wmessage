@@ -1,6 +1,6 @@
 use super::{ConnectorPlugin, DispatchType, DispatcherPlugin, Property};
 use crate::commons::error::AppError;
-use crate::commons::Result;
+use crate::commons::types::Result;
 use lettre::transport::smtp::authentication::Credentials;
 use lettre::{Message, SmtpTransport, Transport};
 use serde::Deserialize;

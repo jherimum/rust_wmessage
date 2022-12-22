@@ -1,6 +1,6 @@
 use crate::commons::error::IntoAppError;
+use crate::commons::types::{Id, Result};
 use crate::commons::{encrypt::Encrypter, error::AppError};
-use crate::commons::{Id, Result};
 use crate::schema::passwords;
 use derive_getters::Getters;
 use diesel::{insert_into, prelude::*};
@@ -15,10 +15,9 @@ pub struct Password {
 
 impl Password {
     pub fn new(id: Id, plain_password: &str, encrypter: &dyn Encrypter) -> Result<Password> {
-        encrypter.encrypt(plain_password).map(|_hash| Password {
-            id: id,
-            hash: _hash,
-        })
+        encrypter
+            .encrypt(plain_password)
+            .map(|_hash| Password { id, hash: _hash })
     }
 
     pub fn authenticate(&self, plain_password: &str, encrypter: &dyn Encrypter) -> Result<bool> {
@@ -47,7 +46,7 @@ impl Password {
 
 #[cfg(test)]
 mod test {
-    use crate::commons::{encrypt::MockEncrypter, id::Id::new_id};
+    use crate::commons::{encrypt::MockEncrypter, id::id::new_id};
 
     use super::Password;
 

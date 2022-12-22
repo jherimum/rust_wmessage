@@ -3,7 +3,7 @@ use actix_web::{
     HttpResponse, Scope,
 };
 
-use crate::{commons::database::DbPool, models::health::Health};
+use crate::{commons::types::DbPool, models::health::Health};
 
 pub fn routes() -> Scope {
     Scope::new("/health").service(web::resource("").route(web::get().to(health)))

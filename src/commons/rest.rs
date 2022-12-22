@@ -19,7 +19,7 @@ where
 impl<T: Serialize + Clone + Debug> Response<T> {
     pub fn new(data: T) -> Response<T> {
         Response {
-            data: data,
+            data,
             links: HashMap::new(),
         }
     }

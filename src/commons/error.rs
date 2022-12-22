@@ -1,5 +1,4 @@
-use super::rest::RestErrorKind;
-use crate::commons::Result;
+use super::{rest::RestErrorKind, types::Result};
 use crate::models::ModelErrorKind;
 use actix_web::{error::UrlGenerationError, http::StatusCode, HttpResponse, ResponseError};
 use config::ConfigError;
@@ -80,7 +79,7 @@ impl From<AppError> for AppErrorResponse {
 impl AppError {
     pub fn new(kind: AppErrorKind, mesage: &str, cause: Option<&str>) -> Self {
         AppError {
-            kind: kind,
+            kind,
             message: mesage.to_string(),
             cause: cause.map(String::from),
         }
@@ -101,7 +100,7 @@ impl AppError {
     pub fn model_error(kind: ModelErrorKind) -> Self {
         Self::new(
             AppErrorKind::ModelError(kind.clone()),
-            &kind.clone().to_string(),
+            &kind.to_string(),
             None,
         )
     }

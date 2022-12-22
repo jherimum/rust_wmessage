@@ -1,7 +1,8 @@
-use crate::commons::{database::DbPool, Result};
+use crate::commons::error::IntoRestError;
+use crate::commons::types::{DbPool, Result};
 use crate::models::workspace::Workspace;
 use crate::{
-    commons::{encrypt::argon::Argon, error::IntoAppError, error::IntoRestError},
+    commons::{encrypt::argon::Argon, error::IntoAppError},
     models::apikey::ApiKey,
 };
 use actix_web::{
@@ -30,9 +31,9 @@ struct ApiKeyResponse {
 impl From<(ApiKey, String)> for ApiKeyResponse {
     fn from(k: (ApiKey, String)) -> Self {
         ApiKeyResponse {
-            id: k.0.id().clone(),
+            id: *k.0.id(),
             name: k.0.name().clone(),
-            expires_at: k.0.expires_at().clone(),
+            expires_at: *k.0.expires_at(),
             key: Some(k.1),
         }
     }

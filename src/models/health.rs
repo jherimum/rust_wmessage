@@ -1,5 +1,5 @@
 use crate::commons::error::IntoAppError;
-use crate::commons::Result;
+use crate::commons::types::Result;
 use crate::schema::health::dsl::*;
 use diesel::prelude::*;
 use diesel::PgConnection;

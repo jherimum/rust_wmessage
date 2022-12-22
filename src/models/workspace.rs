@@ -1,14 +1,14 @@
 use crate::{
     commons::{
         error::{AppError, IntoAppError},
-        Id, Result,
+        types::{Code, Id, Result},
     },
     schema::workspaces,
 };
 use derive_getters::Getters;
 use diesel::{insert_into, prelude::*};
 
-use super::{Code, ModelErrorKind};
+use super::ModelErrorKind;
 
 #[derive(Insertable, Identifiable, Debug, Clone, PartialEq, Queryable, Eq, Getters)]
 #[diesel(table_name = workspaces)]
@@ -19,7 +19,7 @@ pub struct Workspace {
 
 impl Workspace {
     pub fn new(id: Id, code: Code) -> Self {
-        Workspace { id: id, code: code }
+        Workspace { id, code }
     }
 
     pub fn find(conn: &mut PgConnection, id: &Id) -> Result<Option<Workspace>> {
@@ -40,7 +40,7 @@ impl Workspace {
     }
 
     pub fn save(conn: &mut PgConnection, ws: Workspace) -> Result<Workspace> {
-        if Self::exists_code(conn, &ws.code())? {
+        if Self::exists_code(conn, ws.code())? {
             return Err(AppError::model_error(
                 ModelErrorKind::WorkspaceCodeAlreadyExists {
                     code: ws.code().to_owned(),

@@ -1,5 +1,6 @@
-use crate::commons::Result;
 use mockall::automock;
+
+use super::types::Result;
 
 #[automock]
 pub trait Encrypter {
@@ -9,8 +10,7 @@ pub trait Encrypter {
 
 pub mod argon {
     use super::Encrypter;
-    use crate::commons::error::IntoAppError;
-    use crate::commons::Result;
+    use crate::commons::{error::IntoAppError, types::Result};
     use argon2::{
         password_hash::SaltString, Argon2, PasswordHash, PasswordHasher, PasswordVerifier,
     };

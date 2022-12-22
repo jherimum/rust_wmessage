@@ -1,5 +1,5 @@
 use wmessage::{
-    commons::{encrypt::MockEncrypter, id::Id::new_id},
+    commons::{encrypt::MockEncrypter, id::id::new_id},
     models::password::Password,
 };
 

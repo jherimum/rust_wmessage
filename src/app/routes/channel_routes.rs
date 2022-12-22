@@ -1,10 +1,7 @@
-use crate::commons::database::DbPool;
 use crate::commons::error::IntoRestError;
-use crate::commons::id::Id::new_id;
-use crate::commons::json::Json;
-use crate::commons::Result;
+use crate::commons::id::id::new_id;
+use crate::commons::types::{Code, DbPool, Id, Json, Result};
 use crate::models::workspace::Workspace;
-use crate::models::Code;
 use crate::{commons::error::IntoAppError, models::channel::Channel};
 use actix_web::HttpRequest;
 use actix_web::{
@@ -48,11 +45,11 @@ struct ChannelResponse {
 
 fn to_response(channel: Channel, req: HttpRequest) -> Result<ChannelResponse> {
     Ok(ChannelResponse {
-        id: channel.id().clone(),
+        id: *channel.id(),
         code: channel.code().clone(),
         description: channel.description().clone(),
         vars: channel.vars().clone(),
-        enabled: channel.enabled().clone(),
+        enabled: *channel.enabled(),
         self_url: req.url_for(
             "channel",
             &[
@@ -65,14 +62,14 @@ fn to_response(channel: Channel, req: HttpRequest) -> Result<ChannelResponse> {
 
 async fn create(
     pool: Data<DbPool>,
-    path: web::Path<uuid::Uuid>,
+    path: web::Path<Id>,
     payload: web::Json<ChannelForm>,
     req: HttpRequest,
 ) -> Result<HttpResponse> {
     let mut conn = pool.get().into_app_error()?;
 
     let form = payload.into_inner();
-    let ws_id = path.into_inner();
+    let ws_id: Id = path.into_inner();
 
     let workspace = Workspace::find(&mut conn, &ws_id).into_not_found("Workspace not found")?;
 

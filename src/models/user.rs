@@ -2,8 +2,8 @@ use super::password::Password;
 use super::workspace::Workspace;
 use crate::commons::error::AppError;
 use crate::commons::error::IntoAppError;
-use crate::commons::Id;
-use crate::commons::Result;
+use crate::commons::types::Id;
+use crate::commons::types::Result;
 use crate::schema::users;
 use derive_getters::Getters;
 use diesel::insert_into;
@@ -30,11 +30,11 @@ impl User {
         owner: bool,
     ) -> User {
         User {
-            id: id,
+            id,
             email: email.to_string(),
-            workspace_id: ws.id().clone(),
-            password_id: password.id().clone(),
-            owner: owner,
+            workspace_id: *ws.id(),
+            password_id: *password.id(),
+            owner,
         }
     }
 

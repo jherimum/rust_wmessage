@@ -1,11 +1,12 @@
-use crate::commons::Result;
-use crate::commons::{database::DbPool, error::IntoAppError};
+use crate::commons::error::IntoAppError;
 use diesel::{r2d2::ConnectionManager, PgConnection};
 use dotenv::dotenv;
 use log::info;
 use r2d2::Pool;
 use serde::Deserialize;
 use std::time::Duration;
+
+use super::types::{DbPool, Result};
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct AppConfig {

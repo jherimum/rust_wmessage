@@ -9,7 +9,7 @@ use wmessage::app::routes::{apikey_routes, channel_routes, message_routes};
 use wmessage::app::routes::{connection_routes, plugin_routes};
 use wmessage::commons::config::AppConfig;
 use wmessage::commons::error::IntoAppError;
-use wmessage::commons::Result;
+use wmessage::commons::types::Result;
 use wmessage::plugins::{smtp, ConnectorPlugins};
 
 #[actix_web::main]

@@ -1,12 +1,16 @@
 use crate::{
-    commons::{json::Json, Id},
-    schema::message_types,
+    commons::{
+        error::IntoAppError,
+        types::{Code, Id, Json, Result},
+    },
+    schema::message_types::{self, dsl},
 };
+use derive_getters::Getters;
 use diesel::prelude::*;
 
-use super::{channel::Channel, Code};
+use super::channel::Channel;
 
-#[derive(Insertable, Identifiable, Debug, Clone, PartialEq, Queryable, Eq)]
+#[derive(Insertable, Identifiable, Debug, Clone, PartialEq, Queryable, Eq, Getters)]
 #[diesel(table_name = message_types)]
 pub struct MessageType {
     id: Id,
@@ -15,6 +19,7 @@ pub struct MessageType {
     vars: Json,
     enabled: bool,
     channel_id: Id,
+    workspace_id: Id,
 }
 
 impl MessageType {
@@ -27,12 +32,25 @@ impl MessageType {
         channel: Channel,
     ) -> Self {
         MessageType {
-            id: id,
+            id,
             code: code.trim().to_uppercase(),
             description: description.to_string(),
-            vars: vars,
-            enabled: enabled,
-            channel_id: channel.id().clone(),
+            vars,
+            enabled,
+            channel_id: *channel.id(),
+            workspace_id: *channel.workspace_id(),
         }
+    }
+
+    pub fn find_by_channel_and_code(
+        conn: &mut PgConnection,
+        channel: Channel,
+        code: Code,
+    ) -> Result<Option<Self>> {
+        message_types::table
+            .filter(dsl::channel_id.eq(channel.id()).and(dsl::code.eq(code)))
+            .first::<MessageType>(conn)
+            .optional()
+            .into_app_error()
     }
 }
