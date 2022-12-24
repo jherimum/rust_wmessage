@@ -1,4 +1,3 @@
-use crate::app::routes::registration_routes::RegistrationForm;
 use crate::commons::encrypt::argon::Argon;
 use crate::commons::id::id::new_id;
 use crate::commons::types::Conn;
@@ -6,6 +5,7 @@ use crate::commons::types::Result;
 use crate::models::password::Password;
 use crate::models::user::User;
 use crate::models::workspace::Workspace;
+use crate::resources::registrations::RegistrationForm;
 use diesel::Connection;
 
 pub struct RegistrationService;

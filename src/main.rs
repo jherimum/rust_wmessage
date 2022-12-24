@@ -3,14 +3,13 @@ use actix_web::web::{self, scope, Data};
 use actix_web::{App, HttpResponse, HttpServer};
 
 use log::info;
-use wmessage::app::routes::health_routes::{self};
-use wmessage::app::routes::registration_routes::{self};
-use wmessage::app::routes::{apikey_routes, channel_routes, message_routes};
-use wmessage::app::routes::{connection_routes, plugin_routes};
+
 use wmessage::commons::config::AppConfig;
 use wmessage::commons::error::IntoAppError;
 use wmessage::commons::types::Result;
 use wmessage::plugins::{smtp, ConnectorPlugins};
+use wmessage::resources::registrations::{self};
+use wmessage::resources::{apikeys, channels, connections, healths, messages, plugins};
 
 #[actix_web::main]
 async fn main() -> Result<()> {
@@ -30,14 +29,14 @@ async fn main() -> Result<()> {
             )])))
             .service(
                 scope("/api")
-                    .service(message_routes::routes())
-                    .service(apikey_routes::create)
-                    .service(health_routes::routes())
-                    .service(plugin_routes::routes())
-                    .service(registration_routes::routes())
-                    .service(channel_routes::routes())
+                    .service(messages::routes())
+                    .service(apikeys::create)
+                    .service(healths::routes())
+                    .service(plugins::routes())
+                    .service(registrations::routes())
+                    .service(channels::routes())
                     .service(web::resource("").route(web::get().to(index)))
-                    .service(scope("/workspaces/{ws_id}").service(connection_routes::routes())),
+                    .service(scope("/workspaces/{ws_id}").service(connections::routes())),
             )
     })
     .bind((config.host, config.port))
