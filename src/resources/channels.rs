@@ -1,6 +1,7 @@
 use crate::commons::error::IntoRestError;
 use crate::commons::id::id::new_id;
-use crate::commons::rest::{AsResponse, IntoLinks, Link, Links, Response, SELF_ID};
+use crate::commons::rest::link::{IntoLinks, Link, Links};
+use crate::commons::rest::{AsResponse, Response, SELF_ID};
 use crate::commons::types::{Code, Conn, DbPool, Id, Json, Result};
 use crate::models::workspace::Workspace;
 use crate::{commons::error::IntoAppError, models::channel::Channel};
