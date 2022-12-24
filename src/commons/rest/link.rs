@@ -31,7 +31,7 @@ impl Links {
     pub fn as_map(&self) -> HashMap<String, Link> {
         self.0
             .iter()
-            .map(|l| (l.name().clone(), l.clone()))
+            .map(|l| (l.name().to_owned(), l.clone()))
             .collect()
     }
 }
