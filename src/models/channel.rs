@@ -36,7 +36,7 @@ impl Channel {
             workspace_id: *ws.id(),
             code: code.trim().to_uppercase(),
             vars,
-            description: description.to_string(),
+            description: description,
             enabled,
         }
     }

@@ -8,7 +8,7 @@ fn test_find_ws_when_do_not_exists() {
     let ctx = build_context("test_find_ws_when_do_not_exists");
     let mut conn = ctx.build_connection_and_migrate();
 
-    let ws = Workspace::find(&mut conn, &new_id());
+    let ws = Workspace::find(&mut conn, new_id());
     assert!(ws.is_ok() && ws.unwrap().is_none());
 }
 
@@ -22,7 +22,7 @@ fn test_find_ws_when_exists() {
 
     new_workspace(&mut conn, id, code);
 
-    let ws = Workspace::find(&mut conn, &id);
+    let ws = Workspace::find(&mut conn, id);
 
     assert_eq!(
         ws.unwrap().unwrap(),
@@ -54,5 +54,5 @@ fn test_ws_creation_when_does_not_exists_ws_with_same_code() {
     let mut conn = ctx.build_connection_and_migrate();
 
     let ws = Workspace::save(&mut conn, Workspace::new(new_id(), "code".to_string())).unwrap();
-    assert_eq!(ws, Workspace::find(&mut conn, &ws.id()).unwrap().unwrap());
+    assert_eq!(ws, Workspace::find(&mut conn, *ws.id()).unwrap().unwrap());
 }

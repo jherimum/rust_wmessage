@@ -36,7 +36,7 @@ impl AsResponse for Channel {
 
 impl IntoLinks for Channel {
     fn to_links(&self, req: HttpRequest) -> Result<Links> {
-        let mut vec = Vec::new();
+        let mut vec = vec![];
         vec.push(Link::new(
             SELF_ID,
             req.url_for(
