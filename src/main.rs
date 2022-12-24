@@ -34,7 +34,7 @@ async fn main() -> Result<()> {
                     .service(healths::routes())
                     .service(plugins::routes())
                     .service(registrations::routes())
-                    .service(channels::routes())
+                    .service(channels::resources())
                     .service(web::resource("").route(web::get().to(index)))
                     .service(scope("/workspaces/{ws_id}").service(connections::routes())),
             )

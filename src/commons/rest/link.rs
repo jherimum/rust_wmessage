@@ -1,10 +1,9 @@
+use crate::commons::types::Result;
 use actix_web::HttpRequest;
 use derive_getters::Getters;
 use serde::Serialize;
 use std::collections::HashMap;
 use url::Url;
-
-use crate::commons::types::Result;
 
 #[derive(Serialize, Debug, Clone, Getters)]
 pub struct Link {

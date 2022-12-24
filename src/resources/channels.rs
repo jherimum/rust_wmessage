@@ -5,27 +5,12 @@ use crate::commons::rest::{AsResponse, Response, SELF_ID};
 use crate::commons::types::{Code, Conn, DbPool, Id, Json, Result};
 use crate::models::workspace::Workspace;
 use crate::{commons::error::IntoAppError, models::channel::Channel};
-use actix_web::HttpRequest;
+use actix_web::{delete, get, patch, post, HttpRequest, Scope};
 use actix_web::{
-    web::{self, get, patch, post, Data},
-    HttpResponse, Scope,
+    web::{self, Data},
+    HttpResponse,
 };
 use serde::Deserialize;
-
-pub fn routes() -> Scope {
-    let channels = web::resource("")
-        .route(post().to(create))
-        .route(get().to(all))
-        .name("channels");
-    let channel = web::resource("/{channel_id}")
-        .route(get().to(find))
-        .route(patch().to(update))
-        .name("channel");
-
-    Scope::new("/workspaces/{ws_id}/channels")
-        .service(channels)
-        .service(channel)
-}
 
 impl AsResponse for Channel {
     type T = Channel;
@@ -41,7 +26,7 @@ impl IntoLinks for Channel {
         vec.push(Link::new(
             SELF_ID,
             req.url_for(
-                "channel",
+                "find_one_channel",
                 &[self.workspace_id().to_string(), self.id().to_string()],
             )
             .into_app_error()?,
@@ -74,6 +59,16 @@ struct CreateChannel {
     enabled: bool,
 }
 
+pub fn resources() -> Scope {
+    Scope::new("/workspaces/{ws_id}/channels")
+        .service(create)
+        .service(delete)
+        .service(update)
+        .service(all)
+        .service(find_one)
+}
+
+#[post("", name = "create_channel")]
 async fn create(
     pool: Data<DbPool>,
     path: web::Path<Id>,
@@ -104,14 +99,22 @@ fn build_channel(workspace: Workspace, payload: web::Json<CreateChannel>) -> Cha
     )
 }
 
-async fn all() -> Result<HttpResponse> {
+#[get("", name = "all_channels")]
+pub async fn all() -> Result<HttpResponse> {
     todo!()
 }
 
-async fn find() -> Result<HttpResponse> {
+#[get("/{channel_id}", name = "find_one_channel")]
+pub async fn find_one() -> Result<HttpResponse> {
     todo!()
 }
 
-async fn update() -> Result<HttpResponse> {
+#[patch("/{channel_id}", name = "update_channel")]
+pub async fn update() -> Result<HttpResponse> {
+    todo!()
+}
+
+#[delete("/{channel_id}", name = "delete_channel")]
+pub async fn delete() -> Result<HttpResponse> {
     todo!()
 }
