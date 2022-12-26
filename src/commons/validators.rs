@@ -11,7 +11,7 @@ lazy_static! {
     pub static ref CODE_REGEX: Regex = Regex::new(r"\A[A-Z]+[[A-Z]_]*\z").unwrap();
 }
 
-#[derive(Serialize, PartialEq, Debug, Eq)]
+#[derive(Serialize, PartialEq, Debug, Eq, PartialOrd)]
 pub enum PasswordSecurityLevel {
     VeryDangerous = 10,
     Dangerous = 20,
@@ -21,12 +21,6 @@ pub enum PasswordSecurityLevel {
     Strong = 60,
     VeryStrong = 70,
     Invulnerable = 80,
-}
-
-impl PartialOrd for PasswordSecurityLevel {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        (*self as isize).partial_cmp(&(*other as isize))
-    }
 }
 
 impl From<u8> for PasswordSecurityLevel {
@@ -68,7 +62,6 @@ pub fn validate_password(password: &str) -> Result<(), ValidationError> {
 
 #[cfg(test)]
 mod tests {
-    use crate::commons::validators::validate_password;
 
     mod password_security_level {
         use crate::commons::validators::PasswordSecurityLevel;
@@ -125,11 +118,5 @@ mod tests {
             assert!(!CODE_REGEX.is_match("_CODE"));
             assert!(!CODE_REGEX.is_match("_c"));
         }
-    }
-
-    #[test]
-    fn test_validate_password() {
-        let x = validate_password("Euge").err().unwrap();
-        println!("{}", x);
     }
 }
