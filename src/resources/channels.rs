@@ -1,7 +1,7 @@
 use crate::commons::error::IntoRestError;
 use crate::commons::id::id::new_id;
-use crate::commons::rest::link::{IntoLinks, Links};
-use crate::commons::rest::{AsResponse, EntityModel, SELF_ID};
+use crate::commons::rest::entity::{AsResponse, EntityModel};
+use crate::commons::rest::link::{IntoLinks, Links, SELF_ID};
 use crate::commons::types::{Code, Conn, DbPool, Id, Json, Result};
 use crate::models::workspace::Workspace;
 use crate::{commons::error::IntoAppError, models::channel::Channel};
@@ -18,9 +18,9 @@ use super::ResourceLink;
 impl AsResponse for Channel {
     type T = Channel;
 
-    fn to_response(self, req: HttpRequest) -> Result<EntityModel<Self::T>> {
+    fn to_response(&self, req: &HttpRequest) -> Result<EntityModel<Self::T>> {
         let links = self.to_links(&req)?;
-        EntityModel::new(self, links)
+        EntityModel::new(Some(self.clone()), links)
     }
 }
 
@@ -81,7 +81,14 @@ async fn create_channel(
     let channel = build_channel(&workspace, &payload);
     let channel = Channel::save(&mut conn, channel)?;
 
-    Ok(channel.to_response(req)?.ok())
+    channel.to_response(&req)?.created(
+        ResourceLink::Channel {
+            ws_id: ws_id,
+            channel_id: *channel.id(),
+        }
+        .url(&req)
+        .ok(),
+    )
 }
 
 fn retrieve_workspace(conn: &mut Conn, ws_id: &Id) -> Result<Workspace> {

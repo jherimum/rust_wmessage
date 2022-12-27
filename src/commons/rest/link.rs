@@ -5,6 +5,8 @@ use serde::Serialize;
 use std::collections::HashMap;
 use url::Url;
 
+pub const SELF_ID: &str = "self";
+
 #[derive(Serialize, Debug, Clone, Getters)]
 pub struct Link {
     #[serde(skip_serializing)]
