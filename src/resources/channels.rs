@@ -1,3 +1,5 @@
+use std::ops::DerefMut;
+
 use crate::commons::error::IntoRestError;
 use crate::commons::id::id::new_id;
 use crate::commons::rest::entity::{AsResponse, EntityModel};
@@ -11,6 +13,8 @@ use actix_web::{
     HttpResponse,
 };
 use actix_web::{HttpRequest, Scope};
+use diesel::PgConnection;
+use lazy_static::__Deref;
 use serde::Deserialize;
 
 use super::ResourceLink;
@@ -106,7 +110,15 @@ fn build_channel(workspace: &Workspace, payload: &web::Json<CreateChannel>) -> C
     )
 }
 
-pub async fn all_channels() -> Result<HttpResponse> {
+pub async fn all_channels(
+    pool: Data<DbPool>,
+    path: web::Path<Id>,
+    req: HttpRequest,
+) -> Result<HttpResponse> {
+    let mut conn = pool.get().into_app_error()?;
+    let ws = retrieve_workspace(&mut conn, &path.into_inner())?;
+    let channels = Channel::all_by_workspace(&mut conn, &ws)?;
+
     todo!()
 }
 

@@ -41,6 +41,13 @@ impl Channel {
         }
     }
 
+    pub fn all_by_workspace(conn: &mut PgConnection, ws: &Workspace) -> Result<Vec<Channel>> {
+        channels::table
+            .filter(dsl::workspace_id.eq(ws.id()))
+            .load::<Channel>(conn)
+            .into_app_error()
+    }
+
     pub fn find_by_ws_and_code(
         conn: &mut PgConnection,
         ws: &Workspace,
