@@ -25,26 +25,26 @@ pub struct Channel {
 impl Channel {
     pub fn new(
         id: Uuid,
-        ws: Workspace,
+        ws: &Workspace,
         code: Code,
-        description: String,
-        vars: Json,
+        description: &str,
+        vars: &Json,
         enabled: bool,
     ) -> Channel {
         Channel {
             id,
             workspace_id: *ws.id(),
             code: code.trim().to_uppercase(),
-            vars,
-            description: description,
+            vars: vars.clone(),
+            description: description.to_string(),
             enabled,
         }
     }
 
     pub fn find_by_ws_and_code(
         conn: &mut PgConnection,
-        ws: Workspace,
-        code: &str,
+        ws: &Workspace,
+        code: &Code,
     ) -> Result<Option<Channel>> {
         channels::table
             .filter(dsl::workspace_id.eq(ws.id()).and(dsl::code.eq(code)))
@@ -53,9 +53,9 @@ impl Channel {
             .into_app_error()
     }
 
-    pub fn exists_code(conn: &mut PgConnection, _code: &str) -> Result<bool> {
+    pub fn exists_code(conn: &mut PgConnection, code: &Code) -> Result<bool> {
         channels::table
-            .filter(dsl::code.eq(_code))
+            .filter(dsl::code.eq(code))
             .count()
             .get_result::<i64>(conn)
             .map(|count| count > 0)

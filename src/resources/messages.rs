@@ -12,7 +12,7 @@ use actix_web::{
 };
 use serde::Deserialize;
 
-pub fn routes() -> Scope {
+pub fn resources() -> Scope {
     Scope::new("/messages").service(web::resource("").route(post().to(create)))
 }
 
@@ -36,19 +36,14 @@ async fn create(
 
     let version = MessageTypeVersion::find_one(
         &mut conn,
-        ws.code().clone(),
-        payload.channel.clone(),
-        payload.r#type.clone(),
-        payload.version,
+        ws.code(),
+        &payload.channel,
+        &payload.r#type,
+        &payload.version,
     )?
     .unwrap();
 
-    Message::new(
-        new_id(),
-        version,
-        payload.payload.clone(),
-        payload.scheduled_to,
-    );
+    Message::new(new_id(), &version, &payload.payload, payload.scheduled_to);
 
     Ok(HttpResponse::Ok().finish())
 }

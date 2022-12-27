@@ -29,7 +29,7 @@ async fn main() -> Result<()> {
             )])))
             .service(
                 scope("/api")
-                    .service(messages::routes())
+                    .service(messages::resources())
                     .service(apikeys::create)
                     .service(healths::routes())
                     .service(plugins::routes())

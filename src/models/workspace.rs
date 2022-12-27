@@ -22,7 +22,7 @@ impl Workspace {
         Workspace { id, code }
     }
 
-    pub fn find(conn: &mut Conn, id: Id) -> Result<Option<Workspace>> {
+    pub fn find(conn: &mut Conn, id: &Id) -> Result<Option<Workspace>> {
         workspaces::table
             .filter(workspaces::id.eq(id))
             .first::<Workspace>(conn)

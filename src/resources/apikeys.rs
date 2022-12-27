@@ -50,8 +50,8 @@ pub async fn create(
     let ws_id = path.into_inner();
     let form = body.into_inner();
 
-    let ws = Workspace::find(&mut conn, ws_id).into_not_found("Worspace not found")?;
-    let result = ApiKey::new(ws, &form.name, form.ttl, Argon::default())?;
+    let ws = Workspace::find(&mut conn, &ws_id).into_not_found("Worspace not found")?;
+    let result = ApiKey::new(&ws, &form.name, form.ttl, &Argon::default())?;
     let tuple = (ApiKey::save(&mut conn, result.0)?, result.1);
 
     Ok(HttpResponse::Ok().json(ApiKeyResponse::from(tuple)))

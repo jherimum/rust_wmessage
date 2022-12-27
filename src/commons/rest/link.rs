@@ -37,5 +37,5 @@ impl Links {
 }
 
 pub trait IntoLinks {
-    fn to_links(&self, req: HttpRequest) -> Result<Links>;
+    fn to_links(&self, req: &HttpRequest) -> Result<Links>;
 }

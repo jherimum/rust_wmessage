@@ -23,10 +23,10 @@ pub struct ApiKey {
 
 impl ApiKey {
     pub fn new(
-        ws: Workspace,
+        ws: &Workspace,
         name: &str,
         ttl: u8,
-        encrypter: impl Encrypter,
+        encrypter: &impl Encrypter,
     ) -> Result<(ApiKey, String)> {
         let _id = new_id();
         let key = new_id();
@@ -50,8 +50,8 @@ impl ApiKey {
         }
     }
 
-    pub fn workspace(self, conn: &mut PgConnection) -> Result<Workspace> {
-        Workspace::find(conn, *self.id())
+    pub fn workspace(&self, conn: &mut PgConnection) -> Result<Workspace> {
+        Workspace::find(conn, self.workspace_id())
             .into_app_error()?
             .into_entity_not_found(&format!("workspace with id {} not found", self.id()))
     }

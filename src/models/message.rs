@@ -23,8 +23,8 @@ pub struct Message {
 impl Message {
     pub fn new(
         id: Id,
-        msg_type_version: MessageTypeVersion,
-        payload: Json,
+        msg_type_version: &MessageTypeVersion,
+        payload: &Json,
         scheduled_to: Option<Timestamp>,
     ) -> Self {
         Message {
@@ -33,8 +33,8 @@ impl Message {
             channel_id: *msg_type_version.channel_id(),
             message_type_id: *msg_type_version.message_type_id(),
             message_type_version_id: *msg_type_version.id(),
-            payload,
-            scheduled_to,
+            payload: payload.clone(),
+            scheduled_to: scheduled_to,
             status: "RECEIVED".to_string(),
         }
     }

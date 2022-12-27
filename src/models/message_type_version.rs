@@ -34,10 +34,10 @@ impl MessageTypeVersion {
 
     pub fn find_one(
         conn: &mut PgConnection,
-        ws_code: Code,
-        channel_code: Code,
-        message_type_code: Code,
-        message_type_version: Version,
+        ws_code: &Code,
+        channel_code: &Code,
+        message_type_code: &Code,
+        message_type_version: &Version,
     ) -> Result<Option<MessageTypeVersion>> {
         message_type_versions::table
             .inner_join(

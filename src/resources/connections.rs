@@ -32,7 +32,7 @@ pub async fn create(
     let _form = body.into_inner();
     let ws_id = path.into_inner();
     let mut conn = pool.get().expect("error");
-    let _ws = Workspace::find(&mut conn, ws_id).expect("msg");
+    let _ws = Workspace::find(&mut conn, &ws_id).expect("msg");
 
     //let mut conn = pool.get().unwrap();
 

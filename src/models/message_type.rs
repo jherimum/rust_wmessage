@@ -25,17 +25,17 @@ pub struct MessageType {
 impl MessageType {
     pub fn new(
         id: Id,
-        code: Code,
+        code: &Code,
         description: &str,
-        vars: Json,
+        vars: &Json,
         enabled: bool,
-        channel: Channel,
+        channel: &Channel,
     ) -> Self {
         MessageType {
             id,
             code: code.trim().to_uppercase(),
             description: description.to_string(),
-            vars,
+            vars: vars.clone(),
             enabled,
             channel_id: *channel.id(),
             workspace_id: *channel.workspace_id(),
@@ -44,8 +44,8 @@ impl MessageType {
 
     pub fn find_by_channel_and_code(
         conn: &mut PgConnection,
-        channel: Channel,
-        code: Code,
+        channel: &Channel,
+        code: &Code,
     ) -> Result<Option<Self>> {
         message_types::table
             .filter(dsl::channel_id.eq(channel.id()).and(dsl::code.eq(code)))
