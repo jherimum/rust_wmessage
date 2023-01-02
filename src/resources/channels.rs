@@ -1,8 +1,7 @@
-use std::ops::DerefMut;
-
+use super::ResourceLink;
 use crate::commons::error::IntoRestError;
 use crate::commons::id::id::new_id;
-use crate::commons::rest::entity::{AsResponse, EntityModel};
+use crate::commons::rest::entity::EntityModel;
 use crate::commons::rest::link::{IntoLinks, Links, SELF_ID};
 use crate::commons::types::{Code, Conn, DbPool, Id, Json, Result};
 use crate::models::workspace::Workspace;
@@ -13,20 +12,7 @@ use actix_web::{
     HttpResponse,
 };
 use actix_web::{HttpRequest, Scope};
-use diesel::PgConnection;
-use lazy_static::__Deref;
 use serde::Deserialize;
-
-use super::ResourceLink;
-
-impl AsResponse for Channel {
-    type T = Channel;
-
-    fn to_response(&self, req: &HttpRequest) -> Result<EntityModel<Self::T>> {
-        let links = self.to_links(&req)?;
-        EntityModel::new(Some(self.clone()), links)
-    }
-}
 
 impl IntoLinks for Channel {
     fn to_links(&self, req: &HttpRequest) -> Result<Links> {
@@ -85,14 +71,13 @@ async fn create_channel(
     let channel = build_channel(&workspace, &payload);
     let channel = Channel::save(&mut conn, channel)?;
 
-    channel.to_response(&req)?.created(
-        ResourceLink::Channel {
-            ws_id: ws_id,
-            channel_id: *channel.id(),
-        }
-        .url(&req)
-        .ok(),
-    )
+    let links = channel.to_links(&req)?;
+    let location = ResourceLink::Channel {
+        ws_id: ws_id,
+        channel_id: *channel.id(),
+    }
+    .url(&req)?;
+    EntityModel::new(Some(channel), links).created(Some(location))
 }
 
 fn retrieve_workspace(conn: &mut Conn, ws_id: &Id) -> Result<Workspace> {
@@ -118,6 +103,8 @@ pub async fn all_channels(
     let mut conn = pool.get().into_app_error()?;
     let ws = retrieve_workspace(&mut conn, &path.into_inner())?;
     let channels = Channel::all_by_workspace(&mut conn, &ws)?;
+
+    //CollectionModel::from_any(channels, Links::new(vec![]));
 
     todo!()
 }

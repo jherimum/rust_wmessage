@@ -1,28 +1,28 @@
 use std::{collections::HashMap, fmt::Debug};
 
-use actix_web::{http::header, HttpRequest, HttpResponse};
+use actix_web::{http::header, HttpResponse};
 use serde::Serialize;
 use url::Url;
 
 use crate::commons::types::Result;
 
-use super::link::{IntoLinks, Link, Links};
+use super::link::{Link, Links};
 
 #[derive(Serialize, Debug, Clone)]
 pub struct EntityModel<T>
 where
-    T: Serialize + Clone + Debug + IntoLinks,
+    T: Serialize,
 {
     data: Option<T>,
     links: HashMap<String, Link>,
 }
 
-impl<T: Serialize + Clone + Debug + IntoLinks> EntityModel<T> {
-    pub fn new(data: Option<T>, links: Links) -> Result<Self> {
-        Ok(EntityModel {
+impl<T: Serialize> EntityModel<T> {
+    pub fn new(data: Option<T>, links: Links) -> Self {
+        EntityModel {
             data: data,
             links: links.as_map(),
-        })
+        }
     }
 
     pub fn ok(&self) -> Result<HttpResponse> {
@@ -40,8 +40,20 @@ impl<T: Serialize + Clone + Debug + IntoLinks> EntityModel<T> {
     }
 }
 
-pub trait AsResponse {
-    type T: Serialize + Clone + Debug + IntoLinks;
+#[derive(Serialize, Debug, Clone)]
+pub struct CollectionModel<T>
+where
+    T: Serialize,
+{
+    data: Vec<EntityModel<T>>,
+    links: HashMap<String, Link>,
+}
 
-    fn to_response(&self, req: &HttpRequest) -> Result<EntityModel<Self::T>>;
+impl<T: Serialize> CollectionModel<T> {
+    pub fn new(data: Vec<EntityModel<T>>, links: Links) -> Self {
+        CollectionModel {
+            data: data,
+            links: links.as_map(),
+        }
+    }
 }
