@@ -1,8 +1,8 @@
-use super::ResourceLink;
+use super::Resource;
 use crate::commons::error::IntoRestError;
 use crate::commons::id::id::new_id;
-use crate::commons::rest::entity::EntityModel;
-use crate::commons::rest::link::{IntoLinks, Links, SELF_ID};
+use crate::commons::rest::entity::{EntityModel, IntoEntityModel};
+use crate::commons::rest::link::{IntoLinks, Link, SELF_ID};
 use crate::commons::types::{Code, Conn, DbPool, Id, Json, Result};
 use crate::models::workspace::Workspace;
 use crate::{commons::error::IntoAppError, models::channel::Channel};
@@ -14,23 +14,52 @@ use actix_web::{
 use actix_web::{HttpRequest, Scope};
 use serde::Deserialize;
 
+impl IntoEntityModel<Vec<EntityModel<Channel>>> for (Workspace, Vec<Channel>) {
+    fn to_entity_model(&self, req: &HttpRequest) -> Result<EntityModel<Vec<EntityModel<Channel>>>> {
+        let channels = &self.1;
+        let entities = channels
+            .into_iter()
+            .map(|c| c.to_entity_model(req).unwrap()) //Deveria aceitar ?
+            .collect();
+
+        Ok(EntityModel::new()
+            .with_data(entities)
+            .with_link(
+                Resource::Channels {
+                    ws_id: *self.0.id(),
+                }
+                .link(SELF_ID, &req)?,
+            )
+            .clone())
+    }
+}
+
+impl IntoEntityModel<Channel> for Channel {
+    fn to_entity_model(&self, req: &HttpRequest) -> Result<EntityModel<Channel>> {
+        Ok(EntityModel::new()
+            .with_data(self.clone())
+            .with_links(self.to_links(&req)?)
+            .clone())
+    }
+}
+
 impl IntoLinks for Channel {
-    fn to_links(&self, req: &HttpRequest) -> Result<Links> {
+    fn to_links(&self, req: &HttpRequest) -> Result<Vec<Link>> {
         let mut vec = vec![];
         vec.push(
-            ResourceLink::Channel {
+            Resource::Channel {
                 ws_id: *self.workspace_id(),
                 channel_id: *self.id(),
             }
             .link(SELF_ID, req)?,
         );
         vec.push(
-            ResourceLink::Channels {
+            Resource::Channels {
                 ws_id: *self.workspace_id(),
             }
             .link("channels", req)?,
         );
-        Ok(Links::new(vec))
+        Ok(vec)
     }
 }
 
@@ -66,18 +95,17 @@ async fn create_channel(
     req: HttpRequest,
 ) -> Result<HttpResponse> {
     let mut conn = pool.get().into_app_error()?;
-    let ws_id = path.into_inner();
-    let workspace = retrieve_workspace(&mut conn, &ws_id)?;
+    let workspace = retrieve_workspace(&mut conn, &path.into_inner())?;
     let channel = build_channel(&workspace, &payload);
     let channel = Channel::save(&mut conn, channel)?;
 
-    let links = channel.to_links(&req)?;
-    let location = ResourceLink::Channel {
-        ws_id: ws_id,
-        channel_id: *channel.id(),
-    }
-    .url(&req)?;
-    EntityModel::new(Some(channel), links).created(Some(location))
+    channel.to_entity_model(&req)?.created(Some(
+        Resource::Channel {
+            ws_id: *channel.workspace_id(),
+            channel_id: *channel.id(),
+        }
+        .url(&req)?,
+    ))
 }
 
 fn retrieve_workspace(conn: &mut Conn, ws_id: &Id) -> Result<Workspace> {
@@ -103,10 +131,7 @@ pub async fn all_channels(
     let mut conn = pool.get().into_app_error()?;
     let ws = retrieve_workspace(&mut conn, &path.into_inner())?;
     let channels = Channel::all_by_workspace(&mut conn, &ws)?;
-
-    //CollectionModel::from_any(channels, Links::new(vec![]));
-
-    todo!()
+    (ws, channels).to_entity_model(&req)?.ok()
 }
 
 pub async fn find_channel() -> Result<HttpResponse> {

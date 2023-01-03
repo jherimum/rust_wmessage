@@ -2,7 +2,6 @@ use crate::commons::types::Result;
 use actix_web::HttpRequest;
 use derive_getters::Getters;
 use serde::Serialize;
-use std::collections::HashMap;
 use url::Url;
 
 pub const SELF_ID: &str = "self";
@@ -23,21 +22,6 @@ impl Link {
     }
 }
 
-pub struct Links(Vec<Link>);
-
-impl Links {
-    pub fn new(links: Vec<Link>) -> Self {
-        Links(links)
-    }
-
-    pub fn as_map(&self) -> HashMap<String, Link> {
-        self.0
-            .iter()
-            .map(|l| (l.name().to_owned(), l.clone()))
-            .collect()
-    }
-}
-
 pub trait IntoLinks {
-    fn to_links(&self, req: &HttpRequest) -> Result<Links>;
+    fn to_links(&self, req: &HttpRequest) -> Result<Vec<Link>>;
 }

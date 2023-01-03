@@ -16,18 +16,18 @@ pub mod plugins;
 pub mod registrations;
 pub mod workspaces;
 
-pub enum ResourceLink {
+pub enum Resource {
     Channels { ws_id: Id },
     Channel { ws_id: Id, channel_id: Id },
 }
 
-impl ResourceLink {
+impl Resource {
     pub fn url(&self, req: &HttpRequest) -> Result<Url> {
         match self {
-            ResourceLink::Channels { ws_id } => req
+            Resource::Channels { ws_id } => req
                 .url_for("channels", &[ws_id.to_string()])
                 .into_app_error(),
-            ResourceLink::Channel { ws_id, channel_id } => req
+            Resource::Channel { ws_id, channel_id } => req
                 .url_for("channel", &[ws_id.to_string(), channel_id.to_string()])
                 .into_app_error(),
         }
