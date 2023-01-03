@@ -48,6 +48,18 @@ impl Channel {
             .into_app_error()
     }
 
+    pub fn find_by_ws_and_id(
+        conn: &mut PgConnection,
+        ws_id: &Id,
+        id: &Id,
+    ) -> Result<Option<Channel>> {
+        channels::table
+            .filter(dsl::workspace_id.eq(ws_id).and(dsl::id.eq(id)))
+            .first::<Channel>(conn)
+            .optional()
+            .into_app_error()
+    }
+
     pub fn find_by_ws_and_code(
         conn: &mut PgConnection,
         ws: &Workspace,

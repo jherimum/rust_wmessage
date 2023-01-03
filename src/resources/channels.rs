@@ -1,7 +1,9 @@
 use super::Resource;
 use crate::commons::error::IntoRestError;
 use crate::commons::id::id::new_id;
-use crate::commons::rest::entity::{EntityModel, IntoEntityModel};
+use crate::commons::rest::entity::{
+    CollectionModel, Entity, EntityModel, ToCollectionModel, ToEntityModel,
+};
 use crate::commons::rest::link::{IntoLinks, Link, SELF_ID};
 use crate::commons::types::{Code, Conn, DbPool, Id, Json, Result};
 use crate::models::workspace::Workspace;
@@ -14,31 +16,30 @@ use actix_web::{
 use actix_web::{HttpRequest, Scope};
 use serde::Deserialize;
 
-impl IntoEntityModel<Vec<EntityModel<Channel>>> for (Workspace, Vec<Channel>) {
-    fn to_entity_model(&self, req: &HttpRequest) -> Result<EntityModel<Vec<EntityModel<Channel>>>> {
-        let channels = &self.1;
-        let entities = channels
-            .into_iter()
-            .map(|c| c.to_entity_model(req).unwrap()) //Deveria aceitar ?
+impl ToCollectionModel<Channel> for (Workspace, Vec<Channel>) {
+    fn to_collection_model(&self, req: &HttpRequest) -> Result<CollectionModel<Channel>> {
+        let entities: Vec<EntityModel<Channel>> = self
+            .1
+            .iter()
+            .map(|c| c.to_entity_model(&req).unwrap())
             .collect();
-
-        Ok(EntityModel::new()
-            .with_data(entities)
+        Ok(CollectionModel::new()
+            .add_entities(entities)
             .with_link(
                 Resource::Channels {
                     ws_id: *self.0.id(),
                 }
                 .link(SELF_ID, &req)?,
-            )
+            )?
             .clone())
     }
 }
 
-impl IntoEntityModel<Channel> for Channel {
+impl ToEntityModel<Channel> for Channel {
     fn to_entity_model(&self, req: &HttpRequest) -> Result<EntityModel<Channel>> {
         Ok(EntityModel::new()
             .with_data(self.clone())
-            .with_links(self.to_links(&req)?)
+            .with_links(self.clone(), req)?
             .clone())
     }
 }
@@ -131,11 +132,19 @@ pub async fn all_channels(
     let mut conn = pool.get().into_app_error()?;
     let ws = retrieve_workspace(&mut conn, &path.into_inner())?;
     let channels = Channel::all_by_workspace(&mut conn, &ws)?;
-    (ws, channels).to_entity_model(&req)?.ok()
+    (ws, channels).to_collection_model(&req)?.ok()
 }
 
-pub async fn find_channel() -> Result<HttpResponse> {
-    todo!()
+pub async fn find_channel(
+    pool: Data<DbPool>,
+    path: web::Path<(Id, Id)>,
+    req: HttpRequest,
+) -> Result<HttpResponse> {
+    let mut conn = pool.get().into_app_error()?;
+    Channel::find_by_ws_and_id(&mut conn, &path.0, &path.1)
+        .into_not_found("Channel not found")?
+        .to_entity_model(&req)?
+        .ok()
 }
 
 pub async fn update_channel() -> Result<HttpResponse> {
