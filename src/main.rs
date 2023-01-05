@@ -1,9 +1,7 @@
 use actix_web::middleware::Logger;
-use actix_web::web::{self, scope, Data};
-use actix_web::{App, HttpResponse, HttpServer};
-
+use actix_web::web::{scope, Data};
+use actix_web::{App, HttpServer};
 use log::info;
-
 use wmessage::commons::config::AppConfig;
 use wmessage::commons::error::IntoAppError;
 use wmessage::commons::types::Result;
@@ -35,7 +33,6 @@ async fn main() -> Result<()> {
                     .service(plugins::routes())
                     .service(registrations::routes())
                     .service(channels::resources())
-                    .service(web::resource("").route(web::get().to(index)))
                     .service(scope("/workspaces/{ws_id}").service(connections::routes())),
             )
     })
@@ -45,8 +42,4 @@ async fn main() -> Result<()> {
     .await?;
 
     Ok(())
-}
-
-async fn index() -> HttpResponse {
-    HttpResponse::Ok().finish()
 }
