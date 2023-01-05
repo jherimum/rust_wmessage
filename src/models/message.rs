@@ -34,7 +34,7 @@ impl Message {
             message_type_id: *msg_type_version.message_type_id(),
             message_type_version_id: *msg_type_version.id(),
             payload: payload.clone(),
-            scheduled_to: scheduled_to,
+            scheduled_to,
             status: "RECEIVED".to_string(),
         }
     }

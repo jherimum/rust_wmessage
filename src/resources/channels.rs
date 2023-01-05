@@ -21,7 +21,7 @@ impl ToCollectionModel<Channel> for (Workspace, Vec<Channel>) {
         let entities: Vec<EntityModel<Channel>> = self
             .1
             .iter()
-            .map(|c| c.to_entity_model(&req).unwrap())
+            .map(|c| c.to_entity_model(req).unwrap())
             .collect();
         Ok(CollectionModel::new()
             .add_entities(entities)
@@ -29,7 +29,7 @@ impl ToCollectionModel<Channel> for (Workspace, Vec<Channel>) {
                 Resource::Channels {
                     ws_id: *self.0.id(),
                 }
-                .link(SELF_ID, &req)?,
+                .link(SELF_ID, req)?,
             )?
             .clone())
     }
@@ -46,21 +46,17 @@ impl ToEntityModel<Channel> for Channel {
 
 impl IntoLinks for Channel {
     fn to_links(&self, req: &HttpRequest) -> Result<Vec<Link>> {
-        let mut vec = vec![];
-        vec.push(
+        Ok(vec![
             Resource::Channel {
                 ws_id: *self.workspace_id(),
                 channel_id: *self.id(),
             }
             .link(SELF_ID, req)?,
-        );
-        vec.push(
             Resource::Channels {
                 ws_id: *self.workspace_id(),
             }
             .link("channels", req)?,
-        );
-        Ok(vec)
+        ])
     }
 }
 

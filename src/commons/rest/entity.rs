@@ -22,7 +22,7 @@ where
     }
 
     fn ok(&self) -> Result<HttpResponse> {
-        Ok(HttpResponse::Ok().json(&self))
+        Ok(HttpResponse::Ok().json(self))
     }
 
     fn created(&self, location: Option<Url>) -> Result<HttpResponse> {
@@ -32,7 +32,7 @@ where
             r.insert_header((header::LOCATION, url.to_string()));
         }
 
-        Ok(r.json(&self))
+        Ok(r.json(self))
     }
 }
 
@@ -72,6 +72,12 @@ where
     links: HashMap<String, Link>,
 }
 
+impl<T: Serialize> Default for EntityModel<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<T: Serialize> EntityModel<T> {
     pub fn new() -> Self {
         EntityModel {
@@ -93,6 +99,12 @@ where
 {
     data: Vec<EntityModel<T>>,
     links: HashMap<String, Link>,
+}
+
+impl<T: Serialize> Default for CollectionModel<T> {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl<T: Serialize> CollectionModel<T> {

@@ -25,10 +25,10 @@ impl Resource {
     pub fn url(&self, req: &HttpRequest) -> Result<Url> {
         match self {
             Resource::Channels { ws_id } => req
-                .url_for("channels", &[ws_id.to_string()])
+                .url_for("channels", [ws_id.to_string()])
                 .into_app_error(),
             Resource::Channel { ws_id, channel_id } => req
-                .url_for("channel", &[ws_id.to_string(), channel_id.to_string()])
+                .url_for("channel", [ws_id.to_string(), channel_id.to_string()])
                 .into_app_error(),
         }
     }
