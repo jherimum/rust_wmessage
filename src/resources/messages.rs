@@ -31,12 +31,11 @@ async fn create(
     pool: Data<DbPool>,
 ) -> Result<HttpResponse> {
     let mut conn = pool.get().into_app_error()?;
-
     let ws = api_key.workspace(&mut conn)?;
 
     let version = MessageTypeVersion::find_one(
         &mut conn,
-        ws.code(),
+        &ws,
         &payload.channel,
         &payload.r#type,
         &payload.version,

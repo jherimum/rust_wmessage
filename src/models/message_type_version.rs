@@ -1,4 +1,5 @@
 use super::message_type::MessageType;
+use super::workspace::Workspace;
 use super::ModelErrorKind;
 use crate::commons::error::IntoAppError;
 use crate::commons::json::JsonSchema;
@@ -34,7 +35,7 @@ impl MessageTypeVersion {
 
     pub fn find_one(
         conn: &mut PgConnection,
-        ws_code: &Code,
+        ws: &Workspace,
         channel_code: &Code,
         message_type_code: &Code,
         message_type_version: &Version,
@@ -45,7 +46,7 @@ impl MessageTypeVersion {
             )
             .filter(
                 workspaces::code
-                    .eq(ws_code)
+                    .eq(ws.code())
                     .and(channels::code.eq(channel_code))
                     .and(message_types::code.eq(message_type_code))
                     .and(message_type_versions::number.eq(message_type_version)),

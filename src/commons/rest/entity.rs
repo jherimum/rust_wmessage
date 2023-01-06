@@ -115,6 +115,26 @@ impl<T: Serialize> CollectionModel<T> {
         }
     }
 
+    pub fn add_to_entity(
+        &mut self,
+        entity: &impl ToEntityModel<T>,
+        req: &HttpRequest,
+    ) -> Result<&mut Self> {
+        self.add_entity(entity.to_entity_model(req)?);
+        Ok(self)
+    }
+
+    pub fn add_to_entities(
+        &mut self,
+        entities: &Vec<impl ToEntityModel<T>>,
+        req: &HttpRequest,
+    ) -> Result<&mut Self> {
+        for entity in entities {
+            self.add_to_entity(entity, req)?;
+        }
+        Ok(self)
+    }
+
     pub fn add_entity(&mut self, entity: EntityModel<T>) -> &mut Self {
         self.data.push(entity);
         self

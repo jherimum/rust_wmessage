@@ -16,21 +16,14 @@ use actix_web::{
 use actix_web::{HttpRequest, Scope};
 use serde::Deserialize;
 
+pub const CHANNEL_RESOURCE: &str = "channel";
+pub const CHANNELS_RESOURCE: &str = "channels";
+
 impl ToCollectionModel<Channel> for (Workspace, Vec<Channel>) {
     fn to_collection_model(&self, req: &HttpRequest) -> Result<CollectionModel<Channel>> {
-        let entities: Vec<EntityModel<Channel>> = self
-            .1
-            .iter()
-            .map(|c| c.to_entity_model(req).unwrap())
-            .collect();
         Ok(CollectionModel::new()
-            .add_entities(entities)
-            .with_link(
-                Resource::Channels {
-                    ws_id: *self.0.id(),
-                }
-                .link(SELF_ID, req)?,
-            )?
+            .add_to_entities(&self.1, req)?
+            .with_link(Resource::Channels { ws_id: self.0.id() }.link(SELF_ID, req)?)?
             .clone())
     }
 }
@@ -48,12 +41,12 @@ impl IntoLinks for Channel {
     fn to_links(&self, req: &HttpRequest) -> Result<Vec<Link>> {
         Ok(vec![
             Resource::Channel {
-                ws_id: *self.workspace_id(),
-                channel_id: *self.id(),
+                ws_id: self.workspace_id(),
+                channel_id: self.id(),
             }
             .link(SELF_ID, req)?,
             Resource::Channels {
-                ws_id: *self.workspace_id(),
+                ws_id: self.workspace_id(),
             }
             .link("channels", req)?,
         ])
@@ -70,12 +63,12 @@ struct CreateChannel {
 
 pub fn resources() -> Scope {
     let channels = web::resource("")
-        .name("channels")
+        .name(CHANNELS_RESOURCE)
         .route(post().to(create_channel))
         .route(get().to(all_channels));
 
     let channel = web::resource("/{channel_id}")
-        .name("channel")
+        .name(CHANNEL_RESOURCE)
         .route(get().to(find_channel))
         .route(patch().to(update_channel))
         .route(delete().to(delete_channel));
@@ -98,8 +91,8 @@ async fn create_channel(
 
     channel.to_entity_model(&req)?.created(Some(
         Resource::Channel {
-            ws_id: *channel.workspace_id(),
-            channel_id: *channel.id(),
+            ws_id: channel.workspace_id(),
+            channel_id: channel.id(),
         }
         .url(&req)?,
     ))

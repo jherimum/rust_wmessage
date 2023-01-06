@@ -1,16 +1,17 @@
 use crate::{
     commons::{
-        error::IntoAppError,
+        error::{AppError, IntoAppError},
         types::{Code, Id, Json, Result},
     },
     schema::message_types::{self, dsl},
 };
 use derive_getters::Getters;
-use diesel::prelude::*;
+use diesel::{insert_into, prelude::*};
+use serde::Serialize;
 
 use super::channel::Channel;
 
-#[derive(Insertable, Identifiable, Debug, Clone, PartialEq, Queryable, Eq, Getters)]
+#[derive(Insertable, Identifiable, Debug, Clone, PartialEq, Queryable, Eq, Getters, Serialize)]
 #[diesel(table_name = message_types)]
 pub struct MessageType {
     id: Id,
@@ -28,7 +29,7 @@ impl MessageType {
         code: &Code,
         description: &str,
         vars: &Json,
-        enabled: bool,
+        enabled: &bool,
         channel: &Channel,
     ) -> Self {
         MessageType {
@@ -36,7 +37,7 @@ impl MessageType {
             code: code.trim().to_uppercase(),
             description: description.to_string(),
             vars: vars.clone(),
-            enabled,
+            enabled: *enabled,
             channel_id: *channel.id(),
             workspace_id: *channel.workspace_id(),
         }
@@ -52,5 +53,16 @@ impl MessageType {
             .first::<MessageType>(conn)
             .optional()
             .into_app_error()
+    }
+
+    pub fn save(conn: &mut PgConnection, message_type: Self) -> Result<MessageType> {
+        match insert_into(dsl::message_types)
+            .values(&message_type)
+            .execute(conn)
+        {
+            Ok(1) => Ok(message_type),
+            Ok(_) => Err(AppError::database_error("channel not inserted")),
+            Err(err) => Err(AppError::from(err)),
+        }
     }
 }
