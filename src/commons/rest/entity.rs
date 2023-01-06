@@ -1,4 +1,4 @@
-use super::link::{IntoLinks, Link};
+use super::link::Link;
 use crate::{commons::types::Result, resources::AsLink};
 use actix_web::{http::header, HttpRequest, HttpResponse};
 use serde::Serialize;
@@ -12,13 +12,6 @@ where
     fn with_link(&mut self, req: &HttpRequest, name: &str, link: impl AsLink) -> Result<&mut Self> {
         let l = link.to_link(name, req)?;
         self.links().insert(l.name().to_string(), l);
-        Ok(self)
-    }
-
-    fn with_links(&mut self, links: impl IntoLinks, req: &HttpRequest) -> Result<&mut Self> {
-        for l in links.to_links(req)? {
-            self.links().insert(l.name().to_string(), l);
-        }
         Ok(self)
     }
 

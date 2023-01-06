@@ -21,7 +21,3 @@ impl Link {
         }
     }
 }
-
-pub trait IntoLinks {
-    fn to_links(&self, req: &HttpRequest) -> Result<Vec<Link>>;
-}
