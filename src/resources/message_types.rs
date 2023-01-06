@@ -1,10 +1,10 @@
-use super::Resource;
+use super::{AsUrl, Resource};
 use crate::{
     commons::{
         error::{IntoAppError, IntoRestError},
         id::id::new_id,
         rest::{
-            entity::{Entity, EntityModel, ToEntityModel},
+            entity::{CollectionModel, Entity, EntityModel, ToCollectionModel, ToEntityModel},
             link::SELF_ID,
         },
         types::{Code, DbPool, Id, Json, Result},
@@ -41,19 +41,21 @@ impl ToEntityModel<MessageType> for MessageType {
         Ok(EntityModel::new()
             .with_data(self.clone())
             .with_link(
+                req,
+                "messageTypes",
                 Resource::MessageTypes {
                     ws_id: self.workspace_id(),
                     channel_id: self.channel_id(),
-                }
-                .link("message_types", req)?,
+                },
             )?
             .with_link(
+                req,
+                SELF_ID,
                 Resource::MessageType {
                     ws_id: self.workspace_id(),
                     channel_id: self.channel_id(),
                     message_type_id: self.id(),
-                }
-                .link(SELF_ID, req)?,
+                },
             )?
             .clone())
     }
@@ -93,7 +95,7 @@ async fn create(
             channel_id: message_type.channel_id(),
             message_type_id: message_type.id(),
         }
-        .url(&req)?,
+        .to_url(&req)?,
     ))
 }
 
@@ -101,10 +103,46 @@ fn retrieve_channel(conn: &mut PgConnection, path: web::Path<(Id, Id)>) -> Resul
     Channel::find_by_ws_and_id(conn, &path.0, &path.1).into_not_found("message")
 }
 
-async fn all() -> Result<HttpResponse> {
-    todo!()
+async fn all(
+    pool: Data<DbPool>,
+    path: web::Path<(Id, Id)>,
+    req: HttpRequest,
+) -> Result<HttpResponse> {
+    let mut conn = pool.get().into_app_error()?;
+    let channel = retrieve_channel(&mut conn, path)?;
+
+    (
+        &channel,
+        &MessageType::find_all_by_channel(&mut conn, &channel)?,
+    )
+        .to_collection_model(&req)?
+        .ok()
+}
+
+impl ToCollectionModel<MessageType> for (&Channel, &Vec<MessageType>) {
+    fn to_collection_model(&self, req: &HttpRequest) -> Result<CollectionModel<MessageType>> {
+        Ok(CollectionModel::new()
+            .add_to_entities(self.1, &req)?
+            .with_link(
+                req,
+                "channel",
+                Resource::Channel {
+                    ws_id: self.0.workspace_id(),
+                    channel_id: self.0.id(),
+                },
+            )?
+            .with_link(
+                req,
+                SELF_ID,
+                Resource::MessageTypes {
+                    ws_id: self.0.workspace_id(),
+                    channel_id: self.0.id(),
+                },
+            )?
+            .clone())
+    }
 }
 
 async fn find() -> Result<HttpResponse> {
-    todo!()
+    Ok(HttpResponse::Ok().finish())
 }

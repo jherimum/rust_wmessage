@@ -1,10 +1,10 @@
-use super::Resource;
+use super::{AsUrl, Resource};
 use crate::commons::error::IntoRestError;
 use crate::commons::id::id::new_id;
 use crate::commons::rest::entity::{
     CollectionModel, Entity, EntityModel, ToCollectionModel, ToEntityModel,
 };
-use crate::commons::rest::link::{IntoLinks, Link, SELF_ID};
+use crate::commons::rest::link::SELF_ID;
 use crate::commons::types::{Code, Conn, DbPool, Id, Json, Result};
 use crate::models::workspace::Workspace;
 use crate::{commons::error::IntoAppError, models::channel::Channel};
@@ -23,7 +23,7 @@ impl ToCollectionModel<Channel> for (Workspace, Vec<Channel>) {
     fn to_collection_model(&self, req: &HttpRequest) -> Result<CollectionModel<Channel>> {
         Ok(CollectionModel::new()
             .add_to_entities(&self.1, req)?
-            .with_link(Resource::Channels { ws_id: self.0.id() }.link(SELF_ID, req)?)?
+            .with_link(req, SELF_ID, Resource::Channels { ws_id: self.0.id() })?
             .clone())
     }
 }
@@ -32,24 +32,30 @@ impl ToEntityModel<Channel> for Channel {
     fn to_entity_model(&self, req: &HttpRequest) -> Result<EntityModel<Channel>> {
         Ok(EntityModel::new()
             .with_data(self.clone())
-            .with_links(self.clone(), req)?
+            .with_link(
+                req,
+                SELF_ID,
+                Resource::Channel {
+                    ws_id: self.workspace_id(),
+                    channel_id: self.id(),
+                },
+            )?
+            .with_link(
+                req,
+                "channels",
+                Resource::Channels {
+                    ws_id: self.workspace_id(),
+                },
+            )?
+            .with_link(
+                req,
+                "messageTypes",
+                Resource::MessageTypes {
+                    ws_id: self.workspace_id(),
+                    channel_id: self.id(),
+                },
+            )?
             .clone())
-    }
-}
-
-impl IntoLinks for Channel {
-    fn to_links(&self, req: &HttpRequest) -> Result<Vec<Link>> {
-        Ok(vec![
-            Resource::Channel {
-                ws_id: self.workspace_id(),
-                channel_id: self.id(),
-            }
-            .link(SELF_ID, req)?,
-            Resource::Channels {
-                ws_id: self.workspace_id(),
-            }
-            .link("channels", req)?,
-        ])
     }
 }
 
@@ -94,7 +100,7 @@ async fn create_channel(
             ws_id: channel.workspace_id(),
             channel_id: channel.id(),
         }
-        .url(&req)?,
+        .to_url(&req)?,
     ))
 }
 

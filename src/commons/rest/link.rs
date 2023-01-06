@@ -1,4 +1,4 @@
-use crate::commons::types::Result;
+use crate::{commons::types::Result, resources::AsLink};
 use actix_web::HttpRequest;
 use derive_getters::Getters;
 use serde::Serialize;

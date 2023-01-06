@@ -21,27 +21,22 @@ use self::{
     message_types::{MESSAGE_TYPES_RESOURCE, MESSAGE_TYPE_RESOURCE},
 };
 
-pub enum Resource<'a> {
-    Channels {
-        ws_id: &'a Id,
-    },
-    Channel {
-        ws_id: &'a Id,
-        channel_id: &'a Id,
-    },
-    MessageType {
-        ws_id: &'a Id,
-        channel_id: &'a Id,
-        message_type_id: &'a Id,
-    },
-    MessageTypes {
-        ws_id: &'a Id,
-        channel_id: &'a Id,
-    },
+pub trait AsLink {
+    fn to_link(&self, name: &str, req: &HttpRequest) -> Result<Link>;
 }
 
-impl Resource<'_> {
-    pub fn url(&self, req: &HttpRequest) -> Result<Url> {
+pub trait AsUrl {
+    fn to_url(&self, req: &HttpRequest) -> Result<Url>;
+}
+
+impl AsLink for Resource<'_> {
+    fn to_link(&self, name: &str, req: &HttpRequest) -> Result<Link> {
+        Ok(Link::new(name, self.to_url(req)?))
+    }
+}
+
+impl AsUrl for Resource<'_> {
+    fn to_url(&self, req: &HttpRequest) -> Result<Url> {
         match self {
             Resource::Channels { ws_id } => req
                 .url_for(CHANNELS_RESOURCE, [ws_id.to_string()])
@@ -74,8 +69,23 @@ impl Resource<'_> {
                 .into_app_error(),
         }
     }
+}
 
-    pub fn link(&self, name: &str, req: &HttpRequest) -> Result<Link> {
-        Ok(Link::new(name, self.url(req)?))
-    }
+pub enum Resource<'a> {
+    Channels {
+        ws_id: &'a Id,
+    },
+    Channel {
+        ws_id: &'a Id,
+        channel_id: &'a Id,
+    },
+    MessageType {
+        ws_id: &'a Id,
+        channel_id: &'a Id,
+        message_type_id: &'a Id,
+    },
+    MessageTypes {
+        ws_id: &'a Id,
+        channel_id: &'a Id,
+    },
 }

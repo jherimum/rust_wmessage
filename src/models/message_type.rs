@@ -55,7 +55,7 @@ impl MessageType {
             .into_app_error()
     }
 
-    pub fn save(conn: &mut PgConnection, message_type: Self) -> Result<MessageType> {
+    pub fn save(conn: &mut PgConnection, message_type: Self) -> Result<Self> {
         match insert_into(dsl::message_types)
             .values(&message_type)
             .execute(conn)
@@ -64,5 +64,12 @@ impl MessageType {
             Ok(_) => Err(AppError::database_error("channel not inserted")),
             Err(err) => Err(AppError::from(err)),
         }
+    }
+
+    pub fn find_all_by_channel(conn: &mut PgConnection, channel: &Channel) -> Result<Vec<Self>> {
+        message_types::table
+            .filter(dsl::channel_id.eq(channel.id()))
+            .load(conn)
+            .into_app_error()
     }
 }

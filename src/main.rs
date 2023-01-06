@@ -7,7 +7,9 @@ use wmessage::commons::error::IntoAppError;
 use wmessage::commons::types::Result;
 use wmessage::plugins::{smtp, ConnectorPlugins};
 use wmessage::resources::registrations::{self};
-use wmessage::resources::{apikeys, channels, connections, healths, messages, plugins};
+use wmessage::resources::{
+    apikeys, channels, connections, healths, message_types, messages, plugins,
+};
 
 #[actix_web::main]
 async fn main() -> Result<()> {
@@ -32,6 +34,7 @@ async fn main() -> Result<()> {
                     .service(healths::routes())
                     .service(plugins::routes())
                     .service(registrations::routes())
+                    .service(message_types::routes())
                     .service(channels::resources())
                     .service(scope("/workspaces/{ws_id}").service(connections::routes())),
             )
