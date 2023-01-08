@@ -29,13 +29,13 @@ pub trait AsUrl {
     fn to_url(&self, req: &HttpRequest) -> Result<Url>;
 }
 
-impl AsLink for Resource<'_> {
+impl AsLink for Resource {
     fn to_link(&self, name: &str, req: &HttpRequest) -> Result<Link> {
         Ok(Link::new(name, self.to_url(req)?))
     }
 }
 
-impl AsUrl for Resource<'_> {
+impl AsUrl for Resource {
     fn to_url(&self, req: &HttpRequest) -> Result<Url> {
         match self {
             Resource::Channels { ws_id } => req
@@ -71,21 +71,21 @@ impl AsUrl for Resource<'_> {
     }
 }
 
-pub enum Resource<'a> {
+pub enum Resource {
     Channels {
-        ws_id: &'a Id,
+        ws_id: Id,
     },
     Channel {
-        ws_id: &'a Id,
-        channel_id: &'a Id,
+        ws_id: Id,
+        channel_id: Id,
     },
     MessageType {
-        ws_id: &'a Id,
-        channel_id: &'a Id,
-        message_type_id: &'a Id,
+        ws_id: Id,
+        channel_id: Id,
+        message_type_id: Id,
     },
     MessageTypes {
-        ws_id: &'a Id,
-        channel_id: &'a Id,
+        ws_id: Id,
+        channel_id: Id,
     },
 }

@@ -23,7 +23,13 @@ impl ToCollectionModel<Channel> for (Workspace, Vec<Channel>) {
     fn to_collection_model(&self, req: &HttpRequest) -> Result<CollectionModel<Channel>> {
         Ok(CollectionModel::new()
             .add_to_entities(&self.1, req)?
-            .with_link(req, SELF_ID, Resource::Channels { ws_id: self.0.id() })?
+            .with_link(
+                req,
+                SELF_ID,
+                Resource::Channels {
+                    ws_id: *self.0.id(),
+                },
+            )?
             .clone())
     }
 }
@@ -36,23 +42,23 @@ impl ToEntityModel<Channel> for Channel {
                 req,
                 SELF_ID,
                 Resource::Channel {
-                    ws_id: self.workspace_id(),
-                    channel_id: self.id(),
+                    ws_id: *self.workspace_id(),
+                    channel_id: *self.id(),
                 },
             )?
             .with_link(
                 req,
                 "channels",
                 Resource::Channels {
-                    ws_id: self.workspace_id(),
+                    ws_id: *self.workspace_id(),
                 },
             )?
             .with_link(
                 req,
                 "messageTypes",
                 Resource::MessageTypes {
-                    ws_id: self.workspace_id(),
-                    channel_id: self.id(),
+                    ws_id: *self.workspace_id(),
+                    channel_id: *self.id(),
                 },
             )?
             .clone())
@@ -97,8 +103,8 @@ async fn create_channel(
 
     channel.to_entity_model(&req)?.created(Some(
         Resource::Channel {
-            ws_id: channel.workspace_id(),
-            channel_id: channel.id(),
+            ws_id: *channel.workspace_id(),
+            channel_id: *channel.id(),
         }
         .to_url(&req)?,
     ))

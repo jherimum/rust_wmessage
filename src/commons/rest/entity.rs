@@ -1,5 +1,8 @@
 use super::link::Link;
-use crate::{commons::types::Result, resources::AsLink};
+use crate::{
+    commons::types::Result,
+    resources::{AsLink, Resource},
+};
 use actix_web::{http::header, HttpRequest, HttpResponse};
 use serde::Serialize;
 use std::{collections::HashMap, fmt::Debug};
@@ -139,3 +142,10 @@ impl<T: Serialize> CollectionModel<T> {
         self
     }
 }
+
+/*
+struct Builder<T: Serialize> {
+    data: Option<T>,
+    links: HashMap<String, Resource>,
+}
+ */

@@ -44,17 +44,17 @@ impl ToEntityModel<MessageType> for MessageType {
                 req,
                 "messageTypes",
                 Resource::MessageTypes {
-                    ws_id: self.workspace_id(),
-                    channel_id: self.channel_id(),
+                    ws_id: *self.workspace_id(),
+                    channel_id: *self.channel_id(),
                 },
             )?
             .with_link(
                 req,
                 SELF_ID,
                 Resource::MessageType {
-                    ws_id: self.workspace_id(),
-                    channel_id: self.channel_id(),
-                    message_type_id: self.id(),
+                    ws_id: *self.workspace_id(),
+                    channel_id: *self.channel_id(),
+                    message_type_id: *self.id(),
                 },
             )?
             .clone())
@@ -91,9 +91,9 @@ async fn create(
 
     message_type.to_entity_model(&req)?.created(Some(
         Resource::MessageType {
-            ws_id: message_type.workspace_id(),
-            channel_id: message_type.channel_id(),
-            message_type_id: message_type.id(),
+            ws_id: *message_type.workspace_id(),
+            channel_id: *message_type.channel_id(),
+            message_type_id: *message_type.id(),
         }
         .to_url(&req)?,
     ))
@@ -127,16 +127,16 @@ impl ToCollectionModel<MessageType> for (&Channel, &Vec<MessageType>) {
                 req,
                 "channel",
                 Resource::Channel {
-                    ws_id: self.0.workspace_id(),
-                    channel_id: self.0.id(),
+                    ws_id: *self.0.workspace_id(),
+                    channel_id: *self.0.id(),
                 },
             )?
             .with_link(
                 req,
                 SELF_ID,
                 Resource::MessageTypes {
-                    ws_id: self.0.workspace_id(),
-                    channel_id: self.0.id(),
+                    ws_id: *self.0.workspace_id(),
+                    channel_id: *self.0.id(),
                 },
             )?
             .clone())
