@@ -1,11 +1,9 @@
-use super::{AsUrl, Resource};
 use crate::{
     commons::{
         error::{IntoAppError, IntoRestError},
         id::id::new_id,
-        rest::{
-            entity::{CollectionModel, Entity, EntityModel, ToCollectionModel, ToEntityModel},
-            link::SELF_ID,
+        rest::entity::{
+            IntoSimpleEntity, IntoSimpleEntityCollection, SimpleEntity, SimpleEntityCollection,
         },
         types::{Code, DbPool, Id, Json, Result},
     },
@@ -17,6 +15,7 @@ use actix_web::{
 };
 use diesel::PgConnection;
 use serde::Deserialize;
+use std::collections::HashMap;
 
 pub const MESSAGE_TYPES_RESOURCE: &str = "message_types";
 pub const MESSAGE_TYPE_RESOURCE: &str = "message_type";
@@ -36,28 +35,21 @@ pub fn routes() -> Scope {
         .service(message_types)
 }
 
-impl ToEntityModel<MessageType> for MessageType {
-    fn to_entity_model(&self, req: &HttpRequest) -> Result<EntityModel<MessageType>> {
-        Ok(EntityModel::new()
-            .with_data(self.clone())
-            .with_link(
-                req,
-                "messageTypes",
-                Resource::MessageTypes {
-                    ws_id: *self.workspace_id(),
-                    channel_id: *self.channel_id(),
-                },
-            )?
-            .with_link(
-                req,
-                SELF_ID,
-                Resource::MessageType {
-                    ws_id: *self.workspace_id(),
-                    channel_id: *self.channel_id(),
-                    message_type_id: *self.id(),
-                },
-            )?
-            .clone())
+impl IntoSimpleEntity<MessageType> for MessageType {
+    fn to_simple_entity(&self, req: &HttpRequest) -> Result<SimpleEntity<MessageType>> {
+        Ok(SimpleEntity::new(Some(self.clone()), HashMap::new()))
+    }
+}
+
+impl IntoSimpleEntityCollection<MessageType> for (Channel, Vec<MessageType>) {
+    fn to_simple_entity_collection(
+        &self,
+        req: &HttpRequest,
+    ) -> Result<crate::commons::rest::entity::SimpleEntityCollection<MessageType>> {
+        let r: Result<Vec<SimpleEntity<MessageType>>> =
+            self.1.iter().map(|mt| mt.to_simple_entity(&req)).collect();
+
+        Ok(SimpleEntityCollection::new(r?, HashMap::new()))
     }
 }
 
@@ -89,14 +81,7 @@ async fn create(
 
     let message_type = MessageType::save(&mut conn, message_type)?;
 
-    message_type.to_entity_model(&req)?.created(Some(
-        Resource::MessageType {
-            ws_id: *message_type.workspace_id(),
-            channel_id: *message_type.channel_id(),
-            message_type_id: *message_type.id(),
-        }
-        .to_url(&req)?,
-    ))
+    Ok(HttpResponse::Created().json(message_type.to_simple_entity(&req)?))
 }
 
 fn retrieve_channel(conn: &mut PgConnection, path: web::Path<(Id, Id)>) -> Result<Channel> {
@@ -110,37 +95,9 @@ async fn all(
 ) -> Result<HttpResponse> {
     let mut conn = pool.get().into_app_error()?;
     let channel = retrieve_channel(&mut conn, path)?;
-
-    (
-        &channel,
-        &MessageType::find_all_by_channel(&mut conn, &channel)?,
-    )
-        .to_collection_model(&req)?
-        .ok()
-}
-
-impl ToCollectionModel<MessageType> for (&Channel, &Vec<MessageType>) {
-    fn to_collection_model(&self, req: &HttpRequest) -> Result<CollectionModel<MessageType>> {
-        Ok(CollectionModel::new()
-            .add_to_entities(self.1, &req)?
-            .with_link(
-                req,
-                "channel",
-                Resource::Channel {
-                    ws_id: *self.0.workspace_id(),
-                    channel_id: *self.0.id(),
-                },
-            )?
-            .with_link(
-                req,
-                SELF_ID,
-                Resource::MessageTypes {
-                    ws_id: *self.0.workspace_id(),
-                    channel_id: *self.0.id(),
-                },
-            )?
-            .clone())
-    }
+    let mts = MessageType::find_all_by_channel(&mut conn, &channel)?;
+    let c = (channel, mts).to_simple_entity_collection(&req)?;
+    Ok(HttpResponse::Ok().json(c))
 }
 
 async fn find() -> Result<HttpResponse> {

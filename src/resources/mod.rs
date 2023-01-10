@@ -14,6 +14,7 @@ use crate::commons::{
     types::{Id, Result},
 };
 use actix_web::HttpRequest;
+use serde::Serialize;
 use url::Url;
 
 use self::{
@@ -71,6 +72,7 @@ impl AsUrl for Resource {
     }
 }
 
+#[derive(Serialize, Debug, Clone)]
 pub enum Resource {
     Channels {
         ws_id: Id,

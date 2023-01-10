@@ -1,8 +1,8 @@
-use super::{AsUrl, Resource};
+use super::{AsLink, Resource};
 use crate::commons::error::IntoRestError;
 use crate::commons::id::id::new_id;
 use crate::commons::rest::entity::{
-    CollectionModel, Entity, EntityModel, ToCollectionModel, ToEntityModel,
+    IntoSimpleEntity, IntoSimpleEntityCollection, SimpleEntity, SimpleEntityCollection,
 };
 use crate::commons::rest::link::SELF_ID;
 use crate::commons::types::{Code, Conn, DbPool, Id, Json, Result};
@@ -15,55 +15,10 @@ use actix_web::{
 };
 use actix_web::{HttpRequest, Scope};
 use serde::Deserialize;
+use std::collections::HashMap;
 
 pub const CHANNEL_RESOURCE: &str = "channel";
 pub const CHANNELS_RESOURCE: &str = "channels";
-
-impl ToCollectionModel<Channel> for (Workspace, Vec<Channel>) {
-    fn to_collection_model(&self, req: &HttpRequest) -> Result<CollectionModel<Channel>> {
-        Ok(CollectionModel::new()
-            .add_to_entities(&self.1, req)?
-            .with_link(
-                req,
-                SELF_ID,
-                Resource::Channels {
-                    ws_id: *self.0.id(),
-                },
-            )?
-            .clone())
-    }
-}
-
-impl ToEntityModel<Channel> for Channel {
-    fn to_entity_model(&self, req: &HttpRequest) -> Result<EntityModel<Channel>> {
-        Ok(EntityModel::new()
-            .with_data(self.clone())
-            .with_link(
-                req,
-                SELF_ID,
-                Resource::Channel {
-                    ws_id: *self.workspace_id(),
-                    channel_id: *self.id(),
-                },
-            )?
-            .with_link(
-                req,
-                "channels",
-                Resource::Channels {
-                    ws_id: *self.workspace_id(),
-                },
-            )?
-            .with_link(
-                req,
-                "messageTypes",
-                Resource::MessageTypes {
-                    ws_id: *self.workspace_id(),
-                    channel_id: *self.id(),
-                },
-            )?
-            .clone())
-    }
-}
 
 #[derive(Deserialize, Debug, Clone)]
 struct CreateChannel {
@@ -90,6 +45,34 @@ pub fn resources() -> Scope {
         .service(channels)
 }
 
+impl IntoSimpleEntity<Channel> for Channel {
+    fn to_simple_entity(&self, req: &HttpRequest) -> Result<SimpleEntity<Channel>> {
+        let mut links = HashMap::new();
+        links.insert(
+            SELF_ID.to_string(),
+            Resource::Channel {
+                ws_id: *self.workspace_id(),
+                channel_id: *self.id(),
+            }
+            .to_link(SELF_ID, req)?,
+        );
+
+        Ok(SimpleEntity::new(Some(self.clone()), links))
+    }
+}
+
+impl IntoSimpleEntityCollection<Channel> for (Workspace, Vec<Channel>) {
+    fn to_simple_entity_collection(
+        &self,
+        req: &HttpRequest,
+    ) -> Result<SimpleEntityCollection<Channel>> {
+        let r: Result<Vec<SimpleEntity<Channel>>> =
+            self.1.iter().map(|c| c.to_simple_entity(req)).collect();
+
+        Ok(SimpleEntityCollection::new(r?, HashMap::new()))
+    }
+}
+
 async fn create_channel(
     pool: Data<DbPool>,
     path: web::Path<Id>,
@@ -100,14 +83,7 @@ async fn create_channel(
     let workspace = retrieve_workspace(&mut conn, &path.into_inner())?;
     let channel = build_channel(&workspace, &payload);
     let channel = Channel::save(&mut conn, channel)?;
-
-    channel.to_entity_model(&req)?.created(Some(
-        Resource::Channel {
-            ws_id: *channel.workspace_id(),
-            channel_id: *channel.id(),
-        }
-        .to_url(&req)?,
-    ))
+    Ok(HttpResponse::Created().json(channel.to_simple_entity(&req)?))
 }
 
 fn retrieve_workspace(conn: &mut Conn, ws_id: &Id) -> Result<Workspace> {
@@ -133,7 +109,7 @@ pub async fn all_channels(
     let mut conn = pool.get().into_app_error()?;
     let ws = retrieve_workspace(&mut conn, &path.into_inner())?;
     let channels = Channel::all_by_workspace(&mut conn, &ws)?;
-    (ws, channels).to_collection_model(&req)?.ok()
+    Ok(HttpResponse::Ok().json((ws, channels).to_simple_entity_collection(&req)?))
 }
 
 pub async fn find_channel(
@@ -142,10 +118,9 @@ pub async fn find_channel(
     req: HttpRequest,
 ) -> Result<HttpResponse> {
     let mut conn = pool.get().into_app_error()?;
-    Channel::find_by_ws_and_id(&mut conn, &path.0, &path.1)
-        .into_not_found("Channel not found")?
-        .to_entity_model(&req)?
-        .ok()
+    let channel = Channel::find_by_ws_and_id(&mut conn, &path.0, &path.1)
+        .into_not_found("Channel not found")?;
+    Ok(HttpResponse::Ok().json(channel.to_simple_entity(&req)?))
 }
 
 pub async fn update_channel() -> Result<HttpResponse> {
